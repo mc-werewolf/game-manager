@@ -14,18 +14,24 @@ Kairo is built using the stable Script API:
 ## Requirements
 
 - Node.js (for development and TypeScript build)
+- pnpm 10.31.0 (this project is managed with pnpm)
 
 ## Setup && Build
 
 1. Install dependencies:
     ```bash
-    npm install
+    pnpm install
     ```
 2. Deploy
     ```bash
-    npm run build
+    pnpm run build
     ```
 3. Auto-deploy on file change:
     ```bash
-    npm run dev
+    pnpm run dev
     ```
+
+## Build pipeline
+
+- Bundling is handled by `esbuild` through `build.mjs`.
+- `pnpm run build` executes type checking, esbuild bundling, and deploy in sequence.
