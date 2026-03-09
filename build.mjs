@@ -11,5 +11,16 @@ await esbuild.build({
 
     mainFields: ["module", "main"],
 
-    external: ["@minecraft/server", "@minecraft/server-ui"],
+    external: [
+        "@minecraft/common",
+        "@minecraft/debug-utilities",
+        "@minecraft/diagnostics",
+        "@minecraft/server",
+        "@minecraft/server-admin",
+        "@minecraft/server-editor",
+        "@minecraft/server-gametest",
+        "@minecraft/server-graphics",
+        "@minecraft/server-net",
+        "@minecraft/server-ui",
+    ],
 });
