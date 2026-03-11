@@ -7,7 +7,7 @@
     "packageManager": "pnpm@10.31.0",
     "scripts": {
         "typecheck": "tsc --noEmit",
-        "build": "node .build/generate-event-imports.js && rimraf BP/scripts && pnpm run typecheck && node .build/build.mjs && pnpm run deploy",
+        "build": "rimraf BP/scripts && pnpm run typecheck && node .build/build.mjs && pnpm run deploy",
         "deploy": "node .build/deploy.js"
     },
     "repository": {
