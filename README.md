@@ -26,10 +26,6 @@ Kairo is built using the stable Script API:
     ```bash
     pnpm run build
     ```
-3. Auto-deploy on file change:
-    ```bash
-    pnpm run dev
-    ```
 
 ## Build pipeline
 
