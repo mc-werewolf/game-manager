@@ -1,7 +1,26 @@
-import path from "path";
 import fs from "fs";
 import fse from "fs-extra";
+import path from "path";
 import { getSafeFolderName } from "./path-utils.js";
+
+function replaceFileWithHardLink(srcPath, dstPath) {
+    if (fs.existsSync(dstPath)) {
+        fs.rmSync(dstPath, { force: true });
+    }
+
+    fse.ensureDirSync(path.dirname(dstPath));
+
+    try {
+        fs.linkSync(srcPath, dstPath);
+    } catch (err) {
+        const code = err?.code;
+        if (code === "EXDEV" || code === "EPERM" || code === "EACCES") {
+            fse.copyFileSync(srcPath, dstPath);
+            return;
+        }
+        throw err;
+    }
+}
 
 export function writePackIcon(rootDir, properties) {
     const srcIcon = path.join(rootDir, "pack_icon.png");
@@ -14,13 +33,13 @@ export function writePackIcon(rootDir, properties) {
     const bpIcon = path.join(bpDir, "pack_icon.png");
 
     fse.ensureDirSync(bpDir);
-    fse.copyFileSync(srcIcon, bpIcon);
+    replaceFileWithHardLink(srcIcon, bpIcon);
 
     const rpDir = path.join(rootDir, "RP");
     const rpIcon = path.join(rpDir, "pack_icon.png");
 
     fse.ensureDirSync(rpDir);
-    fse.copyFileSync(srcIcon, rpIcon);
+    replaceFileWithHardLink(srcIcon, rpIcon);
 
     if (properties?.id) {
         const safeFolderName = getSafeFolderName(properties.id, "addon id");
@@ -28,6 +47,6 @@ export function writePackIcon(rootDir, properties) {
         const rpTexturesIcon = path.join(rpDir, "textures", safeFolderName, "pack_icon.png");
 
         fse.ensureDirSync(path.dirname(rpTexturesIcon));
-        fse.copyFileSync(srcIcon, rpTexturesIcon);
+        replaceFileWithHardLink(srcIcon, rpTexturesIcon);
     }
 }
