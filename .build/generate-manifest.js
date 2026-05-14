@@ -109,7 +109,7 @@ function buildCommon(header, metadata, version, kairoVersion) {
             name: header.name,
             description: header.description,
             version: toVersionString(version),
-            min_engine_version: header.min_engine_version,
+            min_engine_version: toManifestTriple(header.min_engine_version),
         },
     };
 }
@@ -210,7 +210,7 @@ export async function writeManifests(rootDir) {
     const kairoVersion = resolveInstalledKairoVersion(rootDir);
     const common = buildCommon(properties.header, properties.metadata, finalVersion, kairoVersion);
 
-    const bpManifest = buildBP(common, uuids, finalVersion, properties.dependencies);
+    const bpManifest = buildBP(common, uuids, finalVersion, properties.minecraftDependencies);
     const rpManifest = buildRP(common, uuids, finalVersion);
 
     fs.mkdirSync(path.join(rootDir, "BP"), { recursive: true });
