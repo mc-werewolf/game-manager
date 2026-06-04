@@ -20,14 +20,14 @@ export const properties: KairoAddonProperties = {
     dependencies: [
         {
             module_name: "@minecraft/server",
-            version: "2.4.0",
+            version: "2.7.0",
         },
         {
             module_name: "@minecraft/server-ui",
             version: "2.0.0",
         },
     ],
-    /** 前提アドオン */
+    /** 蜑肴署繧｢繝峨が繝ｳ */
     requiredAddons: {
         /**
          * id: version (string) // "kairo": "1.0.0"
