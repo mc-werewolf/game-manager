@@ -1,7 +1,7 @@
-import type { KairoAddonProperties } from "@kairo-js/router";
+import type { AddonProperties } from "@kairo-js/properties";
 
-export const properties: KairoAddonProperties = {
-    id: "werewolf-gamemanager", //# // a-z & 0-9 - _
+export const properties: AddonProperties = {
+    id: "werewolf-gamemanager",
     metadata: {
         authors: ["shizuku86"],
     },
@@ -9,31 +9,19 @@ export const properties: KairoAddonProperties = {
         name: "Werewolf GameManager",
         description: "functions as the central GameManager for the Werewolf game.",
         version: {
-            major: 1,
+            major: 0,
             minor: 1,
             patch: 0,
-            prerelease: "dev.2",
-            // build: "abc123",
         },
-        min_engine_version: [1, 21, 132],
+        min_engine_version: { major: 1, minor: 21, patch: 132 },
     },
-    dependencies: [
-        {
-            module_name: "@minecraft/server",
-            version: "2.7.0",
-        },
-        {
-            module_name: "@minecraft/server-ui",
-            version: "2.0.0",
-        },
+    minecraftDependencies: [
+        { module_name: "@minecraft/server", version: "2.7.0" },
+        { module_name: "@minecraft/server-ui", version: "2.0.0" },
     ],
-    /** 蜑肴署繧｢繝峨が繝ｳ */
-    requiredAddons: {
-        /**
-         * id: version (string) // "kairo": "1.0.0"
-         */
-        kairo: "1.0.0-dev.1",
-        "kairo-datavault": "1.0.0-dev.1",
+    dependencies: {
+        kairo: "^1.0.0-beta.0",
+        "kairo-database": "^1.0.0-beta.0",
     },
     tags: ["official", "stable"],
 };
