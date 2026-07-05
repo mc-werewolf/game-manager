@@ -21,13 +21,13 @@ Minecraft: beforeEvents.entityHurt
        │
        └─ 致死ダメージ → ev.damage = 0 でキャンセル
               │
-              └─ game-manager 内部で game:killPlayer API を呼ぶ
+              └─ game-manager 内部で werewolf:killPlayer API を呼ぶ
                      │
                      ├─ [hook: before] 騎士・ボディガード等が割り込む
                      │       フラグあり → ctx.cancel() で死をキャンセル
                      │
                      └─ フラグなし → 実際に kill 処理
-                            └─ router.emit("game:playerDie", { playerId, ... })
+                            └─ router.emit("werewolf:playerKilled", { playerId, ... })
 ```
 
 ---
@@ -46,7 +46,7 @@ router.beforeEvents.entityHurt.subscribe((ev) => {
     if (isLethal(ev.hurtEntity, ev.damage)) {
         // 非同期なので system.run でラップ
         system.run(async () => {
-            await router.request("werewolf-gamemanager", "game:killPlayer", {
+            await router.request("werewolf-gamemanager", "werewolf:killPlayer", {
                 playerId: ev.hurtEntity.id,
             });
         });
@@ -54,9 +54,9 @@ router.beforeEvents.entityHurt.subscribe((ev) => {
 });
 
 // startup 内
-ev.addonApi.register("game:killPlayer", async ({ playerId }) => {
+ev.addonApi.register("werewolf:killPlayer", async ({ playerId }) => {
     killPlayerActually(playerId);
-    router.emit("game:playerDie", { playerId });
+    router.emit("werewolf:playerKilled", { playerId });
 });
 ```
 
@@ -64,7 +64,7 @@ ev.addonApi.register("game:killPlayer", async ({ playerId }) => {
 
 ```typescript
 // startup 内
-ev.addonApi.hook("werewolf-gamemanager", "game:killPlayer", {
+ev.addonApi.hook("werewolf-gamemanager", "werewolf:killPlayer", {
     priority: 10,
     before: async (ctx) => {
         if (knightFlags.has(ctx.args.playerId)) {
@@ -88,7 +88,7 @@ ev.addonApi.hook("werewolf-gamemanager", "game:killPlayer", {
 
 ---
 
-## game:playerDie ペイロード（暫定）
+## werewolf:playerKilled ペイロード（暫定）
 
 ```typescript
 type PlayerDiePayload = {

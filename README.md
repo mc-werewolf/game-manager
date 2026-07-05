@@ -29,5 +29,5 @@ Kairo is built using the stable Script API:
 
 ## Build pipeline
 
-- Bundling is handled by `esbuild` through `build.mjs`.
+- Bundling is handled by `@kairo-js/build-tools`.
 - `pnpm run build` executes type checking, esbuild bundling, and deploy in sequence.
