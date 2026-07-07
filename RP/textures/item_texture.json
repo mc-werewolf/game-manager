@@ -6,6 +6,9 @@
     "werewolf:game_force_terminator": {
       "textures": "textures/werewolf-gamemanager/items/game_force_terminator"
     },
+    "werewolf:profile": {
+      "textures": "textures/items/name_tag"
+    },
     "werewolf:game_settings": {
       "textures": "textures/werewolf-gamemanager/items/game_settings"
     },

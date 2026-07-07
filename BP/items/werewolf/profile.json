@@ -1,0 +1,18 @@
+{
+  "format_version": "1.21.120",
+  "minecraft:item": {
+    "description": {
+      "identifier": "werewolf:profile"
+    },
+    "components": {
+      "minecraft:icon": "werewolf:profile",
+      "minecraft:max_stack_size": 1,
+      "minecraft:use_modifiers": {
+        "use_duration": 0
+      },
+      "minecraft:display_name": {
+        "value": "werewolf-gamemanager.item.name.profile"
+      }
+    }
+  }
+}
