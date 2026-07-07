@@ -1,7 +1,7 @@
 import { type Player, world } from "@minecraft/server";
 import { router, type CanceledResult } from "@kairo-js/router";
 import { assignRoles } from "./assignRoles";
-import { givePlayerSkillItem } from "./playerItems";
+import { clearPlayerItems } from "./playerItems";
 import { T } from "../constants/translate";
 import { setCurrentGameConfigSnapshot } from "../state/gameConfigSnapshot";
 import { getCurrentGameState, setCurrentGameState } from "../state/gameState";
@@ -43,7 +43,12 @@ export async function prepareGameStart(playersOverride?: readonly Player[]): Pro
 
 function getStartingPlayers(): Player[] {
     const players = world.getPlayers();
-    if (!participationState.hasExplicitParticipants()) return players;
+    if (!participationState.hasExplicitParticipants()) {
+        if (!participationState.hasSpectators()) return players;
+
+        const spectatorIds = new Set(participationState.getSpectatorIds());
+        return players.filter((player) => !spectatorIds.has(player.id));
+    }
 
     const participantIds = new Set(participationState.getParticipantIds());
     return players.filter((player) => participantIds.has(player.id));
@@ -55,10 +60,11 @@ function isCanceledResult(value: GameConfigSnapshot | CanceledResult): value is 
 
 function notifyRoleAssignments(state: GameState): void {
     for (const player of world.getPlayers()) {
+        clearPlayerItems(player);
+
         const playerState = state.players[player.id];
         if (!playerState) continue;
         const role = state.snapshot.roles[playerState.roleId];
-        givePlayerSkillItem(player);
         player.sendMessage(rawtext([
             tr(T.game.roleAssigned),
             text(" "),

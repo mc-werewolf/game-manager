@@ -1,8 +1,10 @@
 import { router } from "@kairo-js/router";
 import { roleCompositionHistory } from "../state/roleCompositionHistory";
 import { roleCountSettings } from "../state/roleCountSettings";
+import { playerProfiles } from "../state/playerProfiles";
 import { savedRoleCompositions } from "../state/savedRoleCompositions";
 import { settingValues } from "../state/settingValues";
+import type { PlayerProfile } from "../types/playerProfile";
 import type { RoleCompositionHistoryRecord } from "../types/roleCompositionHistory";
 import type { SavedRoleCompositionRecord } from "../types/savedRoleComposition";
 import type { SettingValue } from "../types/setting";
@@ -11,6 +13,7 @@ const SETTINGS_KEY = "settings";
 const ROLE_COMPOSITION_KEY = "role-composition";
 const ROLE_COMPOSITION_HISTORY_KEY = "role-composition-history";
 const SAVED_ROLE_COMPOSITIONS_KEY = "saved-role-compositions";
+const PLAYER_PROFILES_KEY = "player-profiles";
 
 export async function restoreGameManagerState(): Promise<void> {
     await Promise.all([
@@ -18,6 +21,7 @@ export async function restoreGameManagerState(): Promise<void> {
         restoreRoleComposition(),
         restoreRoleCompositionHistory(),
         restoreSavedRoleCompositions(),
+        restorePlayerProfiles(),
     ]);
 }
 
@@ -45,6 +49,12 @@ export function saveSavedRoleCompositions(): void {
     });
 }
 
+export function savePlayerProfiles(): void {
+    router.save(PLAYER_PROFILES_KEY, playerProfiles.getAll()).catch((err) => {
+        console.error("[game-manager] Failed to save player profiles:", err);
+    });
+}
+
 async function restoreSettings(): Promise<void> {
     const stored = await router.load<Record<string, SettingValue>>(SETTINGS_KEY);
     if (!isSettingValueRecord(stored)) return;
@@ -67,6 +77,13 @@ async function restoreSavedRoleCompositions(): Promise<void> {
     const stored = await router.load<SavedRoleCompositionRecord[]>(SAVED_ROLE_COMPOSITIONS_KEY);
     if (!isSavedRoleCompositionRecordArray(stored)) return;
     savedRoleCompositions.replaceAll(stored);
+}
+
+async function restorePlayerProfiles(): Promise<void> {
+    const stored = await router.load<PlayerProfile[]>(PLAYER_PROFILES_KEY);
+    if (!isPlayerProfileArray(stored)) return;
+    playerProfiles.replaceAll(stored);
+    savePlayerProfiles();
 }
 
 function isSettingValueRecord(value: unknown): value is Record<string, SettingValue> {
@@ -107,5 +124,26 @@ function isSavedRoleCompositionRecordArray(value: unknown): value is SavedRoleCo
             && typeof candidate.savedByPlayerId === "string"
             && typeof candidate.savedByName === "string"
             && isNumberRecord(candidate.counts);
+    });
+}
+
+function isPlayerProfileArray(value: unknown): value is PlayerProfile[] {
+    if (!Array.isArray(value)) return false;
+    return value.every((record) => {
+        if (!record || typeof record !== "object" || Array.isArray(record)) return false;
+        const candidate = record as Partial<PlayerProfile>;
+        return typeof candidate.playerId === "string"
+            && (candidate.displayId === undefined || typeof candidate.displayId === "string")
+            && typeof candidate.name === "string"
+            && typeof candidate.rating === "number"
+            && typeof candidate.bestRating === "number"
+            && !!candidate.stats
+            && typeof candidate.stats === "object"
+            && !Array.isArray(candidate.stats)
+            && !!candidate.seasons
+            && typeof candidate.seasons === "object"
+            && !Array.isArray(candidate.seasons)
+            && Array.isArray(candidate.history)
+            && Array.isArray(candidate.achievements);
     });
 }

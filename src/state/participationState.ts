@@ -20,8 +20,20 @@ export const participationState = {
         return [...spectators];
     },
 
+    isParticipating(playerId: string): boolean {
+        return participants.has(playerId);
+    },
+
+    isSpectating(playerId: string): boolean {
+        return spectators.has(playerId);
+    },
+
     hasExplicitParticipants(): boolean {
         return participants.size > 0;
+    },
+
+    hasSpectators(): boolean {
+        return spectators.size > 0;
     },
 
     clear(): void {
@@ -29,4 +41,3 @@ export const participationState = {
         spectators.clear();
     },
 };
-

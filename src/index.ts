@@ -1,7 +1,7 @@
-import { world } from "@minecraft/server";
+import { world, type Player } from "@minecraft/server";
 import { router } from "@kairo-js/router";
 import { properties } from "./properties";
-import { GAME_START_ITEM, GAME_SETUP_ITEM, JOIN_REGISTER_ITEM, PLAYER_SKILL_ITEM, SPECTATE_REGISTER_ITEM } from "./constants/items";
+import { GAME_START_ITEM, GAME_SETUP_ITEM, JOIN_REGISTER_ITEM, PROFILE_ITEM, SPECTATE_REGISTER_ITEM } from "./constants/items";
 import { T } from "./constants/translate";
 import { WEREWOLF_GAMERULES } from "./constants/gamerules";
 import { handleRegisterFaction } from "./api/registerFaction";
@@ -21,7 +21,7 @@ import { prepareGameStart } from "./game/startGame";
 import { participationState } from "./state/participationState";
 import { getCurrentGameState } from "./state/gameState";
 import { openSetupForm } from "./forms/setupForm";
-import { openSkillForm } from "./forms/skillForm";
+import { openProfileForm } from "./forms/profileForm";
 import { restoreGameManagerState } from "./persistence/gameManagerPersistence";
 import { tr } from "./ui/text";
 
@@ -73,17 +73,25 @@ router.afterEvents.addonActivate.subscribe((_ev) => {
     });
 
     router.afterEvents.itemUse.subscribe((ev) => {
+        if (ev.itemStack.typeId === PROFILE_ITEM) {
+            openProfileForm(ev.source).catch((err) => {
+                console.error("[game-manager] Failed to open profile form:", err);
+            });
+            return;
+        }
         if (ev.itemStack.typeId === GAME_SETUP_ITEM) {
             openSetupForm(ev.source);
             return;
         }
         if (ev.itemStack.typeId === JOIN_REGISTER_ITEM) {
             participationState.join(ev.source.id);
+            giveSetupItems(ev.source);
             ev.source.sendMessage(tr(T.participation.joined));
             return;
         }
         if (ev.itemStack.typeId === SPECTATE_REGISTER_ITEM) {
             participationState.spectate(ev.source.id);
+            giveSetupItems(ev.source);
             ev.source.sendMessage(tr(T.participation.spectating));
             return;
         }
@@ -94,10 +102,15 @@ router.afterEvents.addonActivate.subscribe((_ev) => {
             });
             return;
         }
-        if (ev.itemStack.typeId === PLAYER_SKILL_ITEM) {
-            openSkillForm(ev.source).catch((err) => {
-                console.error("[game-manager] Failed to open skill form:", err);
-            });
-        }
+    });
+
+    world.afterEvents.playerInteractWithEntity.subscribe((ev) => {
+        if (getCurrentGameState()?.status === "running") return;
+        if (ev.target.typeId !== "minecraft:player") return;
+        if (ev.target.id === ev.player.id) return;
+
+        openProfileForm(ev.player, ev.target as Player).catch((err) => {
+            console.error("[game-manager] Failed to open target profile form:", err);
+        });
     });
 });

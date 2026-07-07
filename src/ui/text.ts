@@ -4,7 +4,7 @@ export function tr(value: string): RawMessage {
     return { translate: value };
 }
 
-export function trWith(value: string, withArgs: string[]): RawMessage {
+export function trWith(value: string, withArgs: string[] | RawMessage): RawMessage {
     return { translate: value, with: withArgs };
 }
 
