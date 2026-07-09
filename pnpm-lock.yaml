@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@kairo-js/build-tools':
-        specifier: file:../../packages/kairo-build-tools
-        version: file:../../packages/kairo-build-tools(@kairo-js/properties@file:../../packages/kairo-properties)
+        specifier: 1.0.0-beta.2
+        version: 1.0.0-beta.2(@kairo-js/properties@file:../../packages/kairo-properties)
       '@kairo-js/properties':
         specifier: file:../../packages/kairo-properties
         version: file:../../packages/kairo-properties
@@ -236,8 +236,9 @@ packages:
   '@fastify/merge-json-schemas@0.2.1':
     resolution: {integrity: sha512-OA3KGBCy6KtIvLf8DINC5880o5iBlDX4SxzLQS8HorJAbqluzLRn80UXU0bxZn7UOFhFgpRJDasfwn9nG4FG4A==}
 
-  '@kairo-js/build-tools@file:../../packages/kairo-build-tools':
-    resolution: {directory: ../../packages/kairo-build-tools, type: directory}
+  '@kairo-js/build-tools@1.0.0-beta.2':
+    resolution: {integrity: sha512-Buyxmcth8DALlPVrSzea1ZrFOzd3W9BfbMjzIqDbRDycPMOHv9aPO1xaW058X0UxOPDKJtE5i9r9Lm2LAqcaYA==}
+    version: 1.0.0-beta.2
     hasBin: true
     peerDependencies:
       '@kairo-js/properties': ^1.2.1
@@ -517,7 +518,7 @@ snapshots:
     dependencies:
       dequal: 2.0.3
 
-  '@kairo-js/build-tools@file:../../packages/kairo-build-tools(@kairo-js/properties@file:../../packages/kairo-properties)':
+  '@kairo-js/build-tools@1.0.0-beta.2(@kairo-js/properties@file:../../packages/kairo-properties)':
     dependencies:
       '@kairo-js/properties': file:../../packages/kairo-properties
       esbuild: 0.27.3
