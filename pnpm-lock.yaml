@@ -15,8 +15,8 @@ importers:
         specifier: 1.2.1
         version: 1.2.1
       '@kairo-js/router':
-        specifier: file:../../packages/kairo-router
-        version: file:../../packages/kairo-router(@minecraft/server-ui@2.0.0(@minecraft/vanilla-data@1.26.2))(@minecraft/server@2.8.0(@minecraft/common@1.2.0)(@minecraft/vanilla-data@1.26.2))
+        specifier: 1.0.0-beta.2
+        version: 1.0.0-beta.2(@minecraft/server-ui@2.0.0(@minecraft/vanilla-data@1.26.2))(@minecraft/server@2.8.0(@minecraft/common@1.2.0)(@minecraft/vanilla-data@1.26.2))
       '@minecraft/common':
         specifier: ^1.2.0
         version: 1.2.0
@@ -242,8 +242,8 @@ packages:
   '@kairo-js/properties@1.2.1':
     resolution: {integrity: sha512-/jdu+th3fY+l1TB9vRi/xr/Zx8E5zlQiJRW4S/KPD1fv+kckDt0PJavFtFsXAr3EGSwHitzDOIz+0Oyjy//pow==}
 
-  '@kairo-js/router@file:../../packages/kairo-router':
-    resolution: {directory: ../../packages/kairo-router, type: directory}
+  '@kairo-js/router@1.0.0-beta.2':
+    resolution: {integrity: sha512-LjdUSGZ9YJwYcPfgVtvF5hxIKlY9BcRZ6a3OaPw+esaRnKf9fYmS0+YFoIaqlkBdtCTFqm5pUxaPxZd8XEJmvw==}
     peerDependencies:
       '@minecraft/server': ^2.8.0
       '@minecraft/server-ui': ^2.0.0
@@ -516,7 +516,7 @@ snapshots:
 
   '@kairo-js/properties@1.2.1': {}
 
-  '@kairo-js/router@file:../../packages/kairo-router(@minecraft/server-ui@2.0.0(@minecraft/vanilla-data@1.26.2))(@minecraft/server@2.8.0(@minecraft/common@1.2.0)(@minecraft/vanilla-data@1.26.2))':
+  '@kairo-js/router@1.0.0-beta.2(@minecraft/server-ui@2.0.0(@minecraft/vanilla-data@1.26.2))(@minecraft/server@2.8.0(@minecraft/common@1.2.0)(@minecraft/vanilla-data@1.26.2))':
     dependencies:
       '@kairo-js/properties': 1.2.1
       '@kairo-js/utils': 1.2.1
