@@ -1,7 +1,6 @@
 import type { Player } from "@minecraft/server";
 import { router, type CanceledResult } from "@kairo-js/router";
 import { assignRoles } from "./assignRoles";
-import { clearPlayerItems } from "./playerItems";
 import { T } from "../constants/translate";
 import { savePlayerProfiles } from "../persistence/gameManagerPersistence";
 import { setCurrentGameConfigSnapshot } from "../state/gameConfigSnapshot";
@@ -13,6 +12,7 @@ import type { GameConfigSnapshot } from "../types/gameConfigSnapshot";
 import type { GameState } from "../types/gameState";
 import { rawtext, text, tr } from "../ui/text";
 import { getGamePlayerId, getWorldPlayers, toGameStartPlayer, type GameStartPlayer } from "./playerIdentity";
+import { playGameStartPresentation } from "./startPresentation";
 
 type DevToolsSessionSummary = {
     readonly players?: readonly {
@@ -51,6 +51,7 @@ export async function prepareGameStart(playersOverride?: readonly (Player | Game
     skillUsageState.clear();
     setCurrentGameState(state);
     router.emit("werewolf:beforeGameStart", state);
+    playGameStartPresentation(players);
     notifyRoleAssignments(state);
     router.emit("werewolf:afterGameStart", state);
     console.warn("[game-manager] Game state started. Phase progression is not implemented yet.");
@@ -121,8 +122,6 @@ function isCanceledResult(value: unknown): value is CanceledResult {
 
 function notifyRoleAssignments(state: GameState): void {
     for (const player of getWorldPlayers()) {
-        clearPlayerItems(player);
-
         const playerState = state.players[getGamePlayerId(player)];
         if (!playerState) continue;
         const role = state.snapshot.roles[playerState.roleId];
