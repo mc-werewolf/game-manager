@@ -1,4 +1,4 @@
-import type { Player } from "@minecraft/server";
+import { system, type Player } from "@minecraft/server";
 import { router, type CanceledResult } from "@kairo-js/router";
 import { assignRoles } from "./assignRoles";
 import { T } from "../constants/translate";
@@ -10,7 +10,7 @@ import { playerProfiles } from "../state/playerProfiles";
 import { skillUsageState } from "../state/skillUsageState";
 import type { GameConfigSnapshot } from "../types/gameConfigSnapshot";
 import type { GameState } from "../types/gameState";
-import { rawtext, text, tr } from "../ui/text";
+import { rawtext, text, tr, trWith } from "../ui/text";
 import { getGamePlayerId, getWorldPlayers, toGameStartPlayer, type GameStartPlayer } from "./playerIdentity";
 import { playGameStartPresentation } from "./startPresentation";
 
@@ -20,6 +20,10 @@ type DevToolsSessionSummary = {
         readonly name?: unknown;
     }[];
 };
+
+const COUNTDOWN_SECONDS = 10;
+const COUNTDOWN_KEY = "werewolf-gamemanager.game.preparation.countdown";
+const GAME_START_MESSAGE_KEY = "werewolf-gamemanager.game.start.message";
 
 export async function prepareGameStart(playersOverride?: readonly (Player | GameStartPlayer)[]): Promise<GameState | undefined> {
     if (playerProfiles.applySeasonTransition()) {
@@ -51,8 +55,10 @@ export async function prepareGameStart(playersOverride?: readonly (Player | Game
     skillUsageState.clear();
     setCurrentGameState(state);
     router.emit("werewolf:beforeGameStart", state);
-    playGameStartPresentation(players);
-    notifyRoleAssignments(state);
+    playGameStartPresentation(players, () => {
+        notifyRoleAssignments(state);
+        startPreparationCountdown(state);
+    });
     router.emit("werewolf:afterGameStart", state);
     console.warn("[game-manager] Game state started. Phase progression is not implemented yet.");
     return state;
@@ -125,10 +131,48 @@ function notifyRoleAssignments(state: GameState): void {
         const playerState = state.players[getGamePlayerId(player)];
         if (!playerState) continue;
         const role = state.snapshot.roles[playerState.roleId];
+        const roleMessage = rawtext([
+            tr(T.game.roleAssigned),
+            text(" "),
+            text(role?.color ?? ""),
+            tr(role?.name ?? playerState.roleId),
+            text("\u00a7r"),
+        ]);
+        player.onScreenDisplay.setTitle(roleMessage, {
+            subtitle: trWith(COUNTDOWN_KEY, [String(COUNTDOWN_SECONDS)]),
+            fadeInDuration: 0,
+            stayDuration: COUNTDOWN_SECONDS * 20,
+            fadeOutDuration: 20,
+        });
         player.sendMessage(rawtext([
             tr(T.game.roleAssigned),
             text(" "),
+            text(role?.color ?? ""),
             tr(role?.name ?? playerState.roleId),
+            text("\u00a7r"),
         ]));
+    }
+}
+
+function startPreparationCountdown(state: GameState): void {
+    for (let seconds = COUNTDOWN_SECONDS; seconds >= 0; seconds -= 1) {
+        system.runTimeout(() => {
+            if (getCurrentGameState() !== state || state.status !== "running") return;
+            showCountdown(seconds);
+        }, (COUNTDOWN_SECONDS - seconds) * 20);
+    }
+}
+
+function showCountdown(seconds: number): void {
+    for (const player of getWorldPlayers()) {
+        try {
+            if (seconds > 0) {
+                player.onScreenDisplay.setActionBar(trWith(COUNTDOWN_KEY, [String(seconds)]));
+            } else {
+                player.onScreenDisplay.setActionBar(tr(GAME_START_MESSAGE_KEY));
+            }
+        } catch (err) {
+            console.warn("[game-manager] Failed to show game start countdown:", err);
+        }
     }
 }

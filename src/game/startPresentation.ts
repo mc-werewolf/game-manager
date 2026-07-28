@@ -1,21 +1,31 @@
 import { system, world, type Player } from "@minecraft/server";
+import { router } from "@kairo-js/router";
 import { clearPlayerItems } from "./playerItems";
 import { getWorldPlayers, type GameStartPlayer } from "./playerIdentity";
 import { tr } from "../ui/text";
+import { gameStartPresentationStepRegistry } from "../registry/gameStartPresentationStepRegistry";
+import type { GameStartPresentationStage } from "../types/gameStartPresentationStep";
 
 const TITLE_KEY = "werewolf-gamemanager.game.start.presentation.title";
 const SUBTITLE_KEY = "werewolf-gamemanager.game.start.presentation.subtitle";
+const STAGE_TITLE_KEY = "werewolf-gamemanager.stage.title";
 const TITLE_RAWTEXT_COMMAND = `titleraw @a title {"rawtext":[{"translate":"${TITLE_KEY}"}]}`;
 const SUBTITLE_RAWTEXT_COMMAND = `titleraw @a subtitle {"rawtext":[{"translate":"${SUBTITLE_KEY}"}]}`;
+const STAGE_TITLE_RAWTEXT_COMMAND = `titleraw @a title {"rawtext":[{"translate":"${STAGE_TITLE_KEY}"}]}`;
 const CAMERA_FADE_DELAY_TICKS = 60;
+const CAMERA_FADE_IN_TICKS = 40;
+const CAMERA_FADE_HOLD_TICKS = 80;
+const CAMERA_FADE_OUT_TICKS = 60;
 const START_SOUND = "mob.wolf.death";
 const CAMERA_FADE_SOUND = "random.anvil_land";
+const STAGE_TELEPORT_COMMAND = "tp @a 0 -59 24 facing 0 -59 0";
 
-export function playGameStartPresentation(players: readonly GameStartPlayer[]): void {
+export function playGameStartPresentation(players: readonly GameStartPlayer[], afterPresentation: () => void): void {
     clearGameStartInventories(players);
     showGameStartTitle();
     playSoundForAll(START_SOUND);
-    scheduleCameraFade();
+    runPresentationStage("start", { playerCount: players.length });
+    scheduleCameraFade(afterPresentation);
 }
 
 function clearGameStartInventories(players: readonly GameStartPlayer[]): void {
@@ -58,16 +68,61 @@ function playSoundForAll(soundId: string): void {
     }
 }
 
-function scheduleCameraFade(): void {
+function scheduleCameraFade(afterPresentation: () => void): void {
     system.runTimeout(() => {
+        runPresentationStage("fadeStart");
+        lockPlayerInputs();
         playSoundForAll(CAMERA_FADE_SOUND);
         fadeGameStartCamera();
     }, CAMERA_FADE_DELAY_TICKS);
+
+    system.runTimeout(() => {
+        teleportPlayersToStageView();
+        showStageTitle();
+        runPresentationStage("blackout");
+    }, CAMERA_FADE_DELAY_TICKS + CAMERA_FADE_IN_TICKS);
+
+    system.runTimeout(() => {
+        unlockPlayerInputs();
+        runPresentationStage("fadeOut");
+    }, CAMERA_FADE_DELAY_TICKS + CAMERA_FADE_IN_TICKS + CAMERA_FADE_HOLD_TICKS);
+
+    system.runTimeout(() => {
+        runPresentationStage("complete").finally(afterPresentation);
+    }, CAMERA_FADE_DELAY_TICKS + CAMERA_FADE_IN_TICKS + CAMERA_FADE_HOLD_TICKS + CAMERA_FADE_OUT_TICKS);
+}
+
+function showStageTitle(): void {
+    for (const player of getWorldPlayers()) {
+        try {
+            player.onScreenDisplay.setTitle(tr(STAGE_TITLE_KEY), {
+                fadeInDuration: 0,
+                stayDuration: CAMERA_FADE_HOLD_TICKS,
+                fadeOutDuration: CAMERA_FADE_OUT_TICKS,
+            });
+        } catch (err) {
+            console.warn("[game-manager] Failed to show stage title:", err);
+        }
+    }
+    runOverworldCommand(STAGE_TITLE_RAWTEXT_COMMAND);
+}
+
+function teleportPlayersToStageView(): void {
+    runOverworldCommand(STAGE_TELEPORT_COMMAND);
+}
+
+function lockPlayerInputs(): void {
+    runOverworldCommand("inputpermission set @a camera disabled");
+    runOverworldCommand("inputpermission set @a movement disabled");
+}
+
+function unlockPlayerInputs(): void {
+    runOverworldCommand("inputpermission set @a movement enabled");
+    runOverworldCommand("inputpermission set @a camera enabled");
 }
 
 function fadeGameStartCamera(): void {
-    runOverworldCommand("inputpermission set @a camera enabled");
-    runOverworldCommand("camera @a fade time 2 1 1 color 0 0 0");
+    runOverworldCommand("camera @a fade time 2 4 3 color 0 0 0");
 }
 
 function runOverworldCommand(command: string): void {
@@ -75,5 +130,20 @@ function runOverworldCommand(command: string): void {
         world.getDimension("overworld").runCommand(command);
     } catch (err) {
         console.warn(`[game-manager] Failed to run command "${command}":`, err);
+    }
+}
+
+async function runPresentationStage(stage: GameStartPresentationStage, payload: Record<string, unknown> = {}): Promise<void> {
+    const eventPayload = {
+        ...payload,
+        stage,
+        tick: router.currentTick,
+    };
+    router.emit("werewolf:gameStartPresentationStage", eventPayload);
+
+    for (const step of gameStartPresentationStepRegistry.getByStage(stage)) {
+        await router.request(step.addonId, step.apiName, eventPayload, { timeout: step.timeout ?? 20 }).catch((err) => {
+            console.warn(`[game-manager] Game start presentation step "${step.id}" failed:`, err);
+        });
     }
 }
