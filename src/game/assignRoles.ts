@@ -1,9 +1,8 @@
-import type { Player } from "@minecraft/server";
 import type { GameConfigSnapshot } from "../types/gameConfigSnapshot";
 import type { GamePlayerState } from "../types/gameState";
-import { getGamePlayerId } from "./playerIdentity";
+import type { GameStartPlayer } from "./playerIdentity";
 
-export function assignRoles(players: readonly Player[], snapshot: GameConfigSnapshot): Record<string, GamePlayerState> {
+export function assignRoles(players: readonly GameStartPlayer[], snapshot: GameConfigSnapshot): Record<string, GamePlayerState> {
     const rolePool = createRolePool(snapshot);
     if (rolePool.length === 0) {
         throw new Error("[game-manager] Cannot start game because no roles are selected");
@@ -21,7 +20,7 @@ export function assignRoles(players: readonly Player[], snapshot: GameConfigSnap
         if (!role) {
             throw new Error(`[game-manager] Selected role "${roleId}" is not registered`);
         }
-        const playerId = getGamePlayerId(player);
+        const playerId = player.playerId;
         result[playerId] = {
             playerId,
             name: player.name,

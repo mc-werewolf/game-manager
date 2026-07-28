@@ -12,9 +12,16 @@ import { skillUsageState } from "../state/skillUsageState";
 import type { GameConfigSnapshot } from "../types/gameConfigSnapshot";
 import type { GameState } from "../types/gameState";
 import { rawtext, text, tr } from "../ui/text";
-import { getGamePlayerId, getWorldPlayers } from "./playerIdentity";
+import { getGamePlayerId, getWorldPlayers, toGameStartPlayer, type GameStartPlayer } from "./playerIdentity";
 
-export async function prepareGameStart(playersOverride?: readonly Player[]): Promise<GameState | undefined> {
+type DevToolsSessionSummary = {
+    readonly players?: readonly {
+        readonly id?: unknown;
+        readonly name?: unknown;
+    }[];
+};
+
+export async function prepareGameStart(playersOverride?: readonly (Player | GameStartPlayer)[]): Promise<GameState | undefined> {
     if (playerProfiles.applySeasonTransition()) {
         savePlayerProfiles();
     }
@@ -29,7 +36,7 @@ export async function prepareGameStart(playersOverride?: readonly Player[]): Pro
     setCurrentGameConfigSnapshot(result);
     router.emit("werewolf:gameConfigResolved", result);
 
-    const players = normalizeStartingPlayers(playersOverride ?? getStartingPlayers());
+    const players = normalizeStartingPlayers(playersOverride ? playersOverride.map(normalizeStartPlayerInput) : await getStartingPlayers());
     const state: GameState = {
         status: "running",
         startedAtTick: router.currentTick,
@@ -50,14 +57,14 @@ export async function prepareGameStart(playersOverride?: readonly Player[]): Pro
     return state;
 }
 
-function normalizeStartingPlayers(players: readonly Player[]): Player[] {
-    const result: Player[] = [];
+function normalizeStartingPlayers(players: readonly GameStartPlayer[]): GameStartPlayer[] {
+    const result: GameStartPlayer[] = [];
     const seenIds = new Set<string>();
     for (const player of players) {
-        if (!player) {
+        if (!player || !player.playerId || !player.name) {
             throw new Error("[game-manager] Cannot start game because a player could not be resolved");
         }
-        const playerId = getGamePlayerId(player);
+        const playerId = player.playerId;
         if (seenIds.has(playerId)) continue;
         seenIds.add(playerId);
         result.push(player);
@@ -68,20 +75,47 @@ function normalizeStartingPlayers(players: readonly Player[]): Player[] {
     return result;
 }
 
-function getStartingPlayers(): Player[] {
-    const players = getWorldPlayers();
+function normalizeStartPlayerInput(player: Player | GameStartPlayer): GameStartPlayer {
+    if ("playerId" in player) return player;
+    return toGameStartPlayer(player);
+}
+
+async function getStartingPlayers(): Promise<GameStartPlayer[]> {
+    const players = getWorldPlayers().map(toGameStartPlayer);
+    const devPlayers = await getDevToolsSimulatedPlayers();
+    const combinedPlayers = [...players, ...devPlayers];
     if (!participationState.hasExplicitParticipants()) {
-        if (!participationState.hasSpectators()) return players;
+        if (!participationState.hasSpectators()) return combinedPlayers;
 
         const spectatorIds = new Set(participationState.getSpectatorIds());
-        return players.filter((player) => !spectatorIds.has(getGamePlayerId(player)));
+        return combinedPlayers.filter((player) => !spectatorIds.has(player.playerId));
     }
 
     const participantIds = new Set(participationState.getParticipantIds());
-    return players.filter((player) => participantIds.has(getGamePlayerId(player)));
+    return combinedPlayers.filter((player) => participantIds.has(player.playerId));
 }
 
-function isCanceledResult(value: GameConfigSnapshot | CanceledResult): value is CanceledResult {
+async function getDevToolsSimulatedPlayers(): Promise<GameStartPlayer[]> {
+    try {
+        const session = await router.request<DevToolsSessionSummary | undefined>(
+            "werewolf-dev-tools",
+            "werewolf-dev-tools:simulatedPlayers.list",
+            undefined,
+            { timeout: 5 },
+        );
+        if (isCanceledResult(session) || !session?.players) return [];
+        return session.players.flatMap((player) => {
+            const name = typeof player.name === "string" && player.name.trim().length > 0 ? player.name : undefined;
+            if (!name) return [];
+            const id = typeof player.id === "string" && player.id.trim().length > 0 ? player.id : name;
+            return [{ playerId: id, name }];
+        });
+    } catch {
+        return [];
+    }
+}
+
+function isCanceledResult(value: unknown): value is CanceledResult {
     return typeof value === "object" && value !== null && "canceled" in value;
 }
 

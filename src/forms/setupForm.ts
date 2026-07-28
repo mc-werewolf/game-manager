@@ -66,6 +66,9 @@ async function invokeSetupFormAction(player: Player, action: StoredSetupFormActi
     const result = await router.request(action.addonId, action.apiName, {
         playerId: player.id,
         playerName: player.name,
+    }, { timeout: 20 }).catch((err) => {
+        player.sendMessage(`[game-manager] ${action.id} is unavailable: ${err instanceof Error ? err.message : String(err)}`);
+        return undefined;
     });
     if (isCanceledResult(result)) {
         player.sendMessage(`[game-manager] ${action.id} is unavailable: ${result.reason}`);

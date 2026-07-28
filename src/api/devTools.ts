@@ -4,8 +4,7 @@ import { roleCountSettings } from "../state/roleCountSettings";
 import { skillOperationRegistry } from "../registry/skillOperationRegistry";
 import type { GameState } from "../types/gameState";
 import { prepareGameStart } from "../game/startGame";
-import type { Player } from "@minecraft/server";
-import { getGamePlayerId, getWorldPlayers } from "../game/playerIdentity";
+import { getGamePlayerId, getWorldPlayers, toGameStartPlayer, type GameStartPlayer } from "../game/playerIdentity";
 
 type DevSetRoleCompositionArgs = {
     readonly roleComposition: Record<string, number>;
@@ -30,7 +29,7 @@ export async function handleDevStartGame(args?: DevStartGameArgs): Promise<GameS
     return prepareGameStart(players);
 }
 
-function resolvePlayersById(playerIds: readonly unknown[]): Player[] {
+function resolvePlayersById(playerIds: readonly unknown[]): GameStartPlayer[] {
     const requestedIds = [...new Set(playerIds.map((playerId) => {
         if (typeof playerId !== "string" || playerId.trim().length === 0) {
             throw new Error("[game-manager] Dev start received an invalid player id");
@@ -41,11 +40,11 @@ function resolvePlayersById(playerIds: readonly unknown[]): Player[] {
         [getGamePlayerId(player), player] as const,
         [player.name, player] as const,
     ]));
-    const missingIds = requestedIds.filter((playerId) => !playersById.has(playerId));
-    if (missingIds.length > 0) {
-        throw new Error(`[game-manager] Dev start players are not available yet: ${missingIds.join(", ")}`);
-    }
-    return requestedIds.map((playerId) => playersById.get(playerId)!);
+    return requestedIds.map((playerId) => {
+        const player = playersById.get(playerId);
+        if (player) return toGameStartPlayer(player);
+        return { playerId, name: playerId };
+    });
 }
 
 export function handleDevGetGameState(): GameState | undefined {

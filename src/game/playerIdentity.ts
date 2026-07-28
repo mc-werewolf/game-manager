@@ -1,7 +1,21 @@
 import { world, type Player } from "@minecraft/server";
 
+export type GameStartPlayer = {
+    readonly playerId: string;
+    readonly name: string;
+    readonly player?: Player;
+};
+
 export function getWorldPlayers(): Player[] {
     return (world.getPlayers() as readonly (Player | undefined)[]).filter(isResolvedPlayer);
+}
+
+export function toGameStartPlayer(player: Player): GameStartPlayer {
+    return {
+        playerId: getGamePlayerId(player),
+        name: player.name,
+        player,
+    };
 }
 
 export function getGamePlayerId(player: Player): string {
