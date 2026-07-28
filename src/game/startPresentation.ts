@@ -13,9 +13,10 @@ const TITLE_RAWTEXT_COMMAND = `titleraw @a title {"rawtext":[{"translate":"${TIT
 const SUBTITLE_RAWTEXT_COMMAND = `titleraw @a subtitle {"rawtext":[{"translate":"${SUBTITLE_KEY}"}]}`;
 const STAGE_TITLE_RAWTEXT_COMMAND = `titleraw @a title {"rawtext":[{"translate":"${STAGE_TITLE_KEY}"}]}`;
 const CAMERA_FADE_DELAY_TICKS = 60;
-const CAMERA_FADE_IN_TICKS = 40;
-const CAMERA_FADE_HOLD_TICKS = 80;
-const CAMERA_FADE_OUT_TICKS = 60;
+const CAMERA_FADE_IN_TICKS = 15;
+const CAMERA_FADE_HOLD_TICKS = 60;
+const CAMERA_FADE_OUT_TICKS = 15;
+const STAGE_REVEAL_DELAY_TICKS = 5;
 const START_SOUND = "mob.wolf.death";
 const CAMERA_FADE_SOUND = "random.anvil_land";
 const STAGE_TELEPORT_COMMAND = "tp @a 0 -59 24 facing 0 -59 0";
@@ -71,23 +72,23 @@ function playSoundForAll(soundId: string): void {
 function scheduleCameraFade(afterPresentation: () => void): void {
     system.runTimeout(() => {
         runPresentationStage("fadeStart");
-        lockPlayerInputs();
-        playSoundForAll(CAMERA_FADE_SOUND);
         fadeGameStartCamera();
     }, CAMERA_FADE_DELAY_TICKS);
 
     system.runTimeout(() => {
-        teleportPlayersToStageView();
         showStageTitle();
+        playSoundForAll(CAMERA_FADE_SOUND);
+        lockPlayerInputs();
+        teleportPlayersToStageView();
         runPresentationStage("blackout");
-    }, CAMERA_FADE_DELAY_TICKS + CAMERA_FADE_IN_TICKS);
+    }, CAMERA_FADE_DELAY_TICKS + CAMERA_FADE_IN_TICKS + STAGE_REVEAL_DELAY_TICKS);
 
     system.runTimeout(() => {
-        unlockPlayerInputs();
         runPresentationStage("fadeOut");
     }, CAMERA_FADE_DELAY_TICKS + CAMERA_FADE_IN_TICKS + CAMERA_FADE_HOLD_TICKS);
 
     system.runTimeout(() => {
+        unlockPlayerInputs();
         runPresentationStage("complete").finally(afterPresentation);
     }, CAMERA_FADE_DELAY_TICKS + CAMERA_FADE_IN_TICKS + CAMERA_FADE_HOLD_TICKS + CAMERA_FADE_OUT_TICKS);
 }
@@ -97,7 +98,7 @@ function showStageTitle(): void {
         try {
             player.onScreenDisplay.setTitle(tr(STAGE_TITLE_KEY), {
                 fadeInDuration: 0,
-                stayDuration: CAMERA_FADE_HOLD_TICKS,
+                stayDuration: CAMERA_FADE_HOLD_TICKS - STAGE_REVEAL_DELAY_TICKS,
                 fadeOutDuration: CAMERA_FADE_OUT_TICKS,
             });
         } catch (err) {
@@ -122,7 +123,7 @@ function unlockPlayerInputs(): void {
 }
 
 function fadeGameStartCamera(): void {
-    runOverworldCommand("camera @a fade time 2 4 3 color 0 0 0");
+    runOverworldCommand("camera @a fade time 0.75 3 0.75 color 0 0 0");
 }
 
 function runOverworldCommand(command: string): void {
