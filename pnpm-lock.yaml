@@ -41,9 +41,6 @@ importers:
       '@minecraft/server-editor':
         specifier: 0.1.0-beta.1.20.20-preview.20
         version: 0.1.0-beta.1.20.20-preview.20(@minecraft/vanilla-data@1.26.2)
-      '@minecraft/server-gametest':
-        specifier: 1.0.0-beta.1.21.60-preview.24
-        version: 1.0.0-beta.1.21.60-preview.24(@minecraft/vanilla-data@1.26.2)
       '@minecraft/server-graphics':
         specifier: 1.0.0-beta.1.21.130-preview.22
         version: 1.0.0-beta.1.21.130-preview.22(@minecraft/common@1.2.0)(@minecraft/server@2.8.0(@minecraft/common@1.2.0)(@minecraft/vanilla-data@1.26.2))
@@ -275,9 +272,6 @@ packages:
 
   '@minecraft/server-editor@0.1.0-beta.1.20.20-preview.20':
     resolution: {integrity: sha512-RUOLX+axqXO4VcFayocqMnC1u88BjaGJbad/t4ymnjWOHo2IutZ9MxmUwHBEh8XM5X+y5DhuOK7wDdlemQUU7g==}
-
-  '@minecraft/server-gametest@1.0.0-beta.1.21.60-preview.24':
-    resolution: {integrity: sha512-bajAjOZ0ZWDaVY8RbDmXlHlimxiqt7pmc4SRgyDiCpOoeG40ecp99/C1DAO0n3YTPnWyA+PXRicV83CLIk1Pmg==}
 
   '@minecraft/server-graphics@1.0.0-beta.1.21.130-preview.22':
     resolution: {integrity: sha512-yrDKD3aRxaUAsdC1EubeRATjTJqHcSkZD9jhK8lqEimSu5H3xzpaxeq5JFQGLqbCV+0BqTPaxCBwbavdtXAIQA==}
@@ -559,13 +553,6 @@ snapshots:
 
   '@minecraft/server-editor@0.1.0-beta.1.20.20-preview.20(@minecraft/vanilla-data@1.26.2)':
     dependencies:
-      '@minecraft/server': 1.19.0(@minecraft/vanilla-data@1.26.2)
-    transitivePeerDependencies:
-      - '@minecraft/vanilla-data'
-
-  '@minecraft/server-gametest@1.0.0-beta.1.21.60-preview.24(@minecraft/vanilla-data@1.26.2)':
-    dependencies:
-      '@minecraft/common': 1.2.0
       '@minecraft/server': 1.19.0(@minecraft/vanilla-data@1.26.2)
     transitivePeerDependencies:
       - '@minecraft/vanilla-data'
