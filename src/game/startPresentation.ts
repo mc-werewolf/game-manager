@@ -16,6 +16,7 @@ const CAMERA_FADE_DELAY_TICKS = 60;
 const CAMERA_FADE_IN_TICKS = 15;
 const CAMERA_FADE_HOLD_TICKS = 60;
 const CAMERA_FADE_OUT_TICKS = 15;
+const STAGE_TELEPORT_DELAY_TICKS = 2;
 const STAGE_REVEAL_DELAY_TICKS = 5;
 const START_SOUND = "mob.wolf.death";
 const CAMERA_FADE_SOUND = "random.anvil_land";
@@ -76,10 +77,13 @@ function scheduleCameraFade(afterPresentation: () => void): void {
     }, CAMERA_FADE_DELAY_TICKS);
 
     system.runTimeout(() => {
-        showStageTitle();
-        playSoundForAll(CAMERA_FADE_SOUND);
         lockPlayerInputs();
         teleportPlayersToStageView();
+    }, CAMERA_FADE_DELAY_TICKS + CAMERA_FADE_IN_TICKS + STAGE_TELEPORT_DELAY_TICKS);
+
+    system.runTimeout(() => {
+        showStageTitle();
+        playSoundForAll(CAMERA_FADE_SOUND);
         runPresentationStage("blackout");
     }, CAMERA_FADE_DELAY_TICKS + CAMERA_FADE_IN_TICKS + STAGE_REVEAL_DELAY_TICKS);
 
