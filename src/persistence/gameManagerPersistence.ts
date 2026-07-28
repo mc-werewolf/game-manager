@@ -1,4 +1,6 @@
+import { world } from "@minecraft/server";
 import { router } from "@kairo-js/router";
+import { T } from "../constants/translate";
 import { roleCompositionHistory } from "../state/roleCompositionHistory";
 import { roleCountSettings } from "../state/roleCountSettings";
 import { playerProfiles } from "../state/playerProfiles";
@@ -8,6 +10,7 @@ import type { PlayerProfile } from "../types/playerProfile";
 import type { RoleCompositionHistoryRecord } from "../types/roleCompositionHistory";
 import type { SavedRoleCompositionRecord } from "../types/savedRoleComposition";
 import type { SettingValue } from "../types/setting";
+import { tr } from "../ui/text";
 
 const SETTINGS_KEY = "settings";
 const ROLE_COMPOSITION_KEY = "role-composition";
@@ -23,6 +26,10 @@ export async function restoreGameManagerState(): Promise<void> {
         restoreSavedRoleCompositions(),
         restorePlayerProfiles(),
     ]);
+    if (playerProfiles.applySeasonTransition()) {
+        savePlayerProfiles();
+        world.sendMessage(tr(T.season.transitioned));
+    }
 }
 
 export function saveSettings(): void {

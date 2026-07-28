@@ -18,8 +18,10 @@ export function handleApplyActions(args: ApplyActionsArgs): ApplyActionsResult {
         });
 
         if (action.type === "kill" && result.applied) {
+            recordDeath(action.targetId, args.context?.actorId, action.reason);
             router.emit("werewolf:playerKilled", {
                 playerId: action.targetId,
+                killerId: args.context?.actorId,
                 reason: action.reason,
                 context: args.context,
             });
@@ -72,8 +74,20 @@ function markDead(playerId: string): boolean {
     const state = getCurrentGameState();
     const playerState = state?.players[playerId];
     if (!playerState) return false;
+    if (!playerState.isAlive) return false;
     playerState.isAlive = false;
     return true;
+}
+
+function recordDeath(targetId: string, actorId: string | undefined, reason: string | undefined): void {
+    const state = getCurrentGameState();
+    if (!state) return;
+    state.deathRecords.push({
+        targetId,
+        killerId: actorId !== undefined && state.players[actorId] !== undefined ? actorId : undefined,
+        reason,
+        tick: router.currentTick,
+    });
 }
 
 function protectPlayer(playerId: string): void {

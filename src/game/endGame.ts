@@ -12,6 +12,7 @@ export function endGame(state: GameState, winnerFactionIds: readonly string[]): 
 
     state.status = "ended";
     state.endedAtTick = router.currentTick;
+    state.endedAtUnixMs = Date.now();
     state.winnerFactionIds = winnerFactionIds;
     playerProfiles.recordGameEnd(state, winnerFactionIds);
     savePlayerProfiles();

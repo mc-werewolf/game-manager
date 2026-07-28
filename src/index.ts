@@ -15,6 +15,7 @@ import { handleDevClearSkillOperations, handleDevGetGameState, handleDevSetRoleC
 import { handleResolveGameConfig } from "./api/resolveGameConfig";
 import { handleResolveSkill } from "./api/resolveSkill";
 import { handleGetSettings, handleResetSettings, handleSetSetting } from "./api/settings";
+import { handleGetPublicServerSnapshot } from "./api/getPublicServerSnapshot";
 import { isDevModeEnabled } from "./dev/devMode";
 import { giveSetupItems } from "./game/playerItems";
 import { prepareGameStart } from "./game/startGame";
@@ -22,7 +23,8 @@ import { participationState } from "./state/participationState";
 import { getCurrentGameState } from "./state/gameState";
 import { openSetupForm } from "./forms/setupForm";
 import { openProfileForm } from "./forms/profileForm";
-import { restoreGameManagerState } from "./persistence/gameManagerPersistence";
+import { restoreGameManagerState, savePlayerProfiles } from "./persistence/gameManagerPersistence";
+import { playerProfiles } from "./state/playerProfiles";
 import { tr } from "./ui/text";
 
 router.init(properties);
@@ -40,6 +42,7 @@ router.beforeEvents.startup.subscribe((ev) => {
     ev.addonApi.register("werewolf:resolveGameConfig", handleResolveGameConfig);
     ev.addonApi.register("werewolf:resolveSkill", handleResolveSkill);
     ev.addonApi.register("werewolf:applyActions", handleApplyActions);
+    ev.addonApi.register("werewolf:getPublicServerSnapshot", handleGetPublicServerSnapshot);
 
     if (isDevModeEnabled()) {
         ev.addonApi.register("werewolf:devSetRoleComposition", handleDevSetRoleComposition);
@@ -59,13 +62,22 @@ if (isDevModeEnabled()) {
 
 router.afterEvents.addonActivate.subscribe((_ev) => {
     Object.assign(world.gameRules, WEREWOLF_GAMERULES);
-    restoreGameManagerState().catch((err) => {
+    restoreGameManagerState().then(() => {
+        registerCurrentSeasonPlayers(world.getPlayers());
+    }).catch((err) => {
         console.error("[game-manager] Failed to restore state:", err);
     });
 
     for (const player of world.getPlayers()) {
         giveSetupItems(player);
     }
+
+    router.afterEvents.playerJoin.subscribe((ev) => {
+        const player = getJoinedPlayer(ev);
+        if (player) {
+            registerCurrentSeasonPlayers([player]);
+        }
+    });
 
     router.afterEvents.playerSpawn.subscribe((ev) => {
         if (getCurrentGameState()?.status === "running") return;
@@ -114,3 +126,22 @@ router.afterEvents.addonActivate.subscribe((_ev) => {
         });
     });
 });
+
+function registerCurrentSeasonPlayers(players: readonly Player[]): void {
+    let changed = false;
+    for (const player of players) {
+        changed = playerProfiles.ensureCurrentSeason(player.id, player.name) || changed;
+    }
+    if (changed) {
+        savePlayerProfiles();
+    }
+}
+
+function getJoinedPlayer(ev: unknown): Player | undefined {
+    const candidate = ev as { readonly player?: Player; readonly playerId?: string; readonly playerName?: string };
+    if (candidate.player) return candidate.player;
+    return world.getPlayers().find((player) =>
+        player.id === candidate.playerId
+        || player.name === candidate.playerName
+    );
+}

@@ -3,15 +3,20 @@ import { router, type CanceledResult } from "@kairo-js/router";
 import { assignRoles } from "./assignRoles";
 import { clearPlayerItems } from "./playerItems";
 import { T } from "../constants/translate";
+import { savePlayerProfiles } from "../persistence/gameManagerPersistence";
 import { setCurrentGameConfigSnapshot } from "../state/gameConfigSnapshot";
 import { getCurrentGameState, setCurrentGameState } from "../state/gameState";
 import { participationState } from "../state/participationState";
+import { playerProfiles } from "../state/playerProfiles";
 import { skillUsageState } from "../state/skillUsageState";
 import type { GameConfigSnapshot } from "../types/gameConfigSnapshot";
 import type { GameState } from "../types/gameState";
 import { rawtext, text, tr } from "../ui/text";
 
 export async function prepareGameStart(playersOverride?: readonly Player[]): Promise<GameState | undefined> {
+    if (playerProfiles.applySeasonTransition()) {
+        savePlayerProfiles();
+    }
     const currentState = getCurrentGameState();
     if (currentState?.status === "running") {
         throw new Error("[game-manager] Cannot start a new game while another game is running");
@@ -27,10 +32,13 @@ export async function prepareGameStart(playersOverride?: readonly Player[]): Pro
     const state: GameState = {
         status: "running",
         startedAtTick: router.currentTick,
+        startedAtUnixMs: Date.now(),
         endedAtTick: undefined,
+        endedAtUnixMs: undefined,
         winnerFactionIds: [],
         snapshot: result,
         players: assignRoles(players, result),
+        deathRecords: [],
     };
     skillUsageState.clear();
     setCurrentGameState(state);
