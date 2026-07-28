@@ -1,13 +1,17 @@
 import { world, type Player } from "@minecraft/server";
 import { clearPlayerItems } from "./playerItems";
 import { getWorldPlayers, type GameStartPlayer } from "./playerIdentity";
+import { tr } from "../ui/text";
 
-const TITLE_TEXT = "\u00a74\u30de\u30a4\u30af\u30e9\u4eba\u72fc \u00a7f/ \u00a74Minecraft Werewolf";
-const SUBTITLE_TEXT = "created by sizuku86";
+const TITLE_KEY = "werewolf-gamemanager.game.start.presentation.title";
+const SUBTITLE_KEY = "werewolf-gamemanager.game.start.presentation.subtitle";
+const TITLE_RAWTEXT_COMMAND = `titleraw @a title {"rawtext":[{"translate":"${TITLE_KEY}"}]}`;
+const SUBTITLE_RAWTEXT_COMMAND = `titleraw @a subtitle {"rawtext":[{"translate":"${SUBTITLE_KEY}"}]}`;
 
 export function playGameStartPresentation(players: readonly GameStartPlayer[]): void {
     clearGameStartInventories(players);
     showGameStartTitle();
+    playGameStartSound();
     fadeGameStartCamera();
 }
 
@@ -25,8 +29,8 @@ function clearGameStartInventories(players: readonly GameStartPlayer[]): void {
 function showGameStartTitle(): void {
     for (const player of getWorldPlayers()) {
         try {
-            player.onScreenDisplay.setTitle(TITLE_TEXT, {
-                subtitle: SUBTITLE_TEXT,
+            player.onScreenDisplay.setTitle(tr(TITLE_KEY), {
+                subtitle: tr(SUBTITLE_KEY),
                 fadeInDuration: 0,
                 stayDuration: 100,
                 fadeOutDuration: 20,
@@ -37,8 +41,18 @@ function showGameStartTitle(): void {
     }
 
     runOverworldCommand("title @a times 0 100 20");
-    runOverworldCommand(`title @a subtitle ${SUBTITLE_TEXT}`);
-    runOverworldCommand(`title @a title ${TITLE_TEXT}`);
+    runOverworldCommand(SUBTITLE_RAWTEXT_COMMAND);
+    runOverworldCommand(TITLE_RAWTEXT_COMMAND);
+}
+
+function playGameStartSound(): void {
+    for (const player of getWorldPlayers()) {
+        try {
+            player.playSound("mob.wolf.death");
+        } catch (err) {
+            console.warn("[game-manager] Failed to play game start sound:", err);
+        }
+    }
 }
 
 function fadeGameStartCamera(): void {

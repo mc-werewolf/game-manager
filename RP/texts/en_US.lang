@@ -12,6 +12,8 @@ werewolf-gamemanager.stage.loading=Loading Stage...
 werewolf-gamemanager.game.preparation.countdown.message=§bGame starting in %s seconds...§r
 werewolf-gamemanager.game.preparation.countdown.warning.message=§bGame starting in %s seconds...§r
 werewolf-gamemanager.game.start.message=§aThe game is starting!§r
+werewolf-gamemanager.game.start.presentation.title=§4Minecraft Werewolf§r
+werewolf-gamemanager.game.start.presentation.subtitle=created by sizuku86
 
 werewolf-gamemanager.game.start.canceled.message=§cThe game start has been canceled.§r
 werewolf-gamemanager.game.forcequit.message=§cThe game has been forcefully terminated.§r

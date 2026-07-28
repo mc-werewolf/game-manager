@@ -12,6 +12,8 @@ werewolf-gamemanager.stage.loading=マップをロード中...
 werewolf-gamemanager.game.preparation.countdown.message=§bゲーム開始まで...%ss§r
 werewolf-gamemanager.game.preparation.countdown.warning.message=§bゲーム開始まで...%ss§r
 werewolf-gamemanager.game.start.message=§aゲーム開始！§r
+werewolf-gamemanager.game.start.presentation.title=§4マイクラ人狼§r
+werewolf-gamemanager.game.start.presentation.subtitle=created by sizuku86
 
 werewolf-gamemanager.game.start.canceled.message=§cゲーム開始がキャンセルされました§r
 werewolf-gamemanager.game.forcequit.message=§cゲームが強制終了されました§r
