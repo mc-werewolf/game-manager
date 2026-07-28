@@ -12,6 +12,10 @@ werewolf-gamemanager.stage.loading=マップをロード中...
 werewolf-gamemanager.game.preparation.countdown.message=§bゲーム開始まで...%ss§r
 werewolf-gamemanager.game.preparation.countdown.warning.message=§bゲーム開始まで...%ss§r
 werewolf-gamemanager.game.start.message=§aゲーム開始！§r
+werewolf-gamemanager.game.start.role.reveal=§fあなたは %1%2%3 §fです§r
+werewolf-gamemanager.game.start.countdown.normal=§8[§b開始まで§8] §f%s秒§r
+werewolf-gamemanager.game.start.countdown.warning=§l§6▶ §e%s §6◀§r
+werewolf-gamemanager.game.start.countdown.start=§l§a▶ ゲーム開始！ ◀§r
 werewolf-gamemanager.game.start.presentation.title=§4マイクラ人狼§r
 werewolf-gamemanager.game.start.presentation.subtitle=created by sizuku86
 

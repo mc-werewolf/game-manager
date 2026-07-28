@@ -12,6 +12,10 @@ werewolf-gamemanager.stage.loading=Loading Stage...
 werewolf-gamemanager.game.preparation.countdown.message=§bGame starting in %s seconds...§r
 werewolf-gamemanager.game.preparation.countdown.warning.message=§bGame starting in %s seconds...§r
 werewolf-gamemanager.game.start.message=§aThe game is starting!§r
+werewolf-gamemanager.game.start.role.reveal=§fYou are %1%2%3§r
+werewolf-gamemanager.game.start.countdown.normal=§8[§bStarting in§8] §f%s seconds§r
+werewolf-gamemanager.game.start.countdown.warning=§l§6▶ §e%s §6◀§r
+werewolf-gamemanager.game.start.countdown.start=§l§a▶ Game Start! ◀§r
 werewolf-gamemanager.game.start.presentation.title=§4Minecraft Werewolf§r
 werewolf-gamemanager.game.start.presentation.subtitle=created by sizuku86
 

@@ -1,7 +1,6 @@
 import { system, type Player } from "@minecraft/server";
 import { router, type CanceledResult } from "@kairo-js/router";
 import { assignRoles } from "./assignRoles";
-import { T } from "../constants/translate";
 import { savePlayerProfiles } from "../persistence/gameManagerPersistence";
 import { setCurrentGameConfigSnapshot } from "../state/gameConfigSnapshot";
 import { getCurrentGameState, setCurrentGameState } from "../state/gameState";
@@ -22,8 +21,13 @@ type DevToolsSessionSummary = {
 };
 
 const COUNTDOWN_SECONDS = 10;
-const COUNTDOWN_KEY = "werewolf-gamemanager.game.preparation.countdown";
-const GAME_START_MESSAGE_KEY = "werewolf-gamemanager.game.start.message";
+const ROLE_REVEAL_KEY = "werewolf-gamemanager.game.start.role.reveal";
+const COUNTDOWN_NORMAL_KEY = "werewolf-gamemanager.game.start.countdown.normal";
+const COUNTDOWN_WARNING_KEY = "werewolf-gamemanager.game.start.countdown.warning";
+const COUNTDOWN_START_KEY = "werewolf-gamemanager.game.start.countdown.start";
+const COUNTDOWN_NORMAL_SOUND = "note.hat";
+const COUNTDOWN_WARNING_SOUND = "random.orb";
+const COUNTDOWN_START_SOUND = "random.levelup";
 
 export async function prepareGameStart(playersOverride?: readonly (Player | GameStartPlayer)[]): Promise<GameState | undefined> {
     if (playerProfiles.applySeasonTransition()) {
@@ -131,25 +135,17 @@ function notifyRoleAssignments(state: GameState): void {
         const playerState = state.players[getGamePlayerId(player)];
         if (!playerState) continue;
         const role = state.snapshot.roles[playerState.roleId];
-        const roleMessage = rawtext([
-            tr(T.game.roleAssigned),
-            text(" "),
-            text(role?.color ?? ""),
-            tr(role?.name ?? playerState.roleId),
-            text("\u00a7r"),
-        ]);
+        const roleMessage = trWith(ROLE_REVEAL_KEY, roleName(role, playerState.roleId));
         player.onScreenDisplay.setTitle(roleMessage, {
-            subtitle: trWith(COUNTDOWN_KEY, [String(COUNTDOWN_SECONDS)]),
+            subtitle: trWith(COUNTDOWN_NORMAL_KEY, [String(COUNTDOWN_SECONDS)]),
             fadeInDuration: 0,
             stayDuration: COUNTDOWN_SECONDS * 20,
             fadeOutDuration: 20,
         });
         player.sendMessage(rawtext([
-            tr(T.game.roleAssigned),
-            text(" "),
-            text(role?.color ?? ""),
-            tr(role?.name ?? playerState.roleId),
-            text("\u00a7r"),
+            text("\u00a78━━━━━━━━━━━━━━━━━━━━\n"),
+            roleMessage,
+            text("\n\u00a78━━━━━━━━━━━━━━━━━━━━\u00a7r"),
         ]));
     }
 }
@@ -167,12 +163,26 @@ function showCountdown(seconds: number): void {
     for (const player of getWorldPlayers()) {
         try {
             if (seconds > 0) {
-                player.onScreenDisplay.setActionBar(trWith(COUNTDOWN_KEY, [String(seconds)]));
+                player.sendMessage(trWith(seconds <= 3 ? COUNTDOWN_WARNING_KEY : COUNTDOWN_NORMAL_KEY, [String(seconds)]));
+                player.playSound(seconds <= 3 ? COUNTDOWN_WARNING_SOUND : COUNTDOWN_NORMAL_SOUND);
             } else {
-                player.onScreenDisplay.setActionBar(tr(GAME_START_MESSAGE_KEY));
+                player.sendMessage(rawtext([
+                    text("\u00a7l"),
+                    tr(COUNTDOWN_START_KEY),
+                    text("\u00a7r"),
+                ]));
+                player.playSound(COUNTDOWN_START_SOUND);
             }
         } catch (err) {
             console.warn("[game-manager] Failed to show game start countdown:", err);
         }
     }
+}
+
+function roleName(role: GameState["snapshot"]["roles"][string] | undefined, fallbackRoleId: string) {
+    return rawtext([
+        text(role?.color ?? "\u00a7f"),
+        tr(role?.name ?? fallbackRoleId),
+        text("\u00a7r"),
+    ]);
 }

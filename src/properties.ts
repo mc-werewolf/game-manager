@@ -11,7 +11,7 @@ export const properties: AddonProperties = {
         version: {
             major: 0,
             minor: 1,
-            patch: 14,
+            patch: 15,
         },
         min_engine_version: { major: 1, minor: 21, patch: 132 },
     },
