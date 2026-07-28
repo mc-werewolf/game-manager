@@ -28,7 +28,7 @@ export async function prepareGameStart(playersOverride?: readonly Player[]): Pro
     setCurrentGameConfigSnapshot(result);
     router.emit("werewolf:gameConfigResolved", result);
 
-    const players = playersOverride ?? getStartingPlayers();
+    const players = normalizeStartingPlayers(playersOverride ?? getStartingPlayers());
     const state: GameState = {
         status: "running",
         startedAtTick: router.currentTick,
@@ -47,6 +47,23 @@ export async function prepareGameStart(playersOverride?: readonly Player[]): Pro
     router.emit("werewolf:afterGameStart", state);
     console.warn("[game-manager] Game state started. Phase progression is not implemented yet.");
     return state;
+}
+
+function normalizeStartingPlayers(players: readonly Player[]): Player[] {
+    const result: Player[] = [];
+    const seenIds = new Set<string>();
+    for (const player of players) {
+        if (!player || typeof player.id !== "string" || player.id.length === 0) {
+            throw new Error("[game-manager] Cannot start game because a player could not be resolved");
+        }
+        if (seenIds.has(player.id)) continue;
+        seenIds.add(player.id);
+        result.push(player);
+    }
+    if (result.length === 0) {
+        throw new Error("[game-manager] Cannot start game because no players are available");
+    }
+    return result;
 }
 
 function getStartingPlayers(): Player[] {
