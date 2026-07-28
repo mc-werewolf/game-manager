@@ -12,6 +12,7 @@ import { skillUsageState } from "../state/skillUsageState";
 import type { GameConfigSnapshot } from "../types/gameConfigSnapshot";
 import type { GameState } from "../types/gameState";
 import { rawtext, text, tr } from "../ui/text";
+import { getGamePlayerId } from "./playerIdentity";
 
 export async function prepareGameStart(playersOverride?: readonly Player[]): Promise<GameState | undefined> {
     if (playerProfiles.applySeasonTransition()) {
@@ -53,11 +54,12 @@ function normalizeStartingPlayers(players: readonly Player[]): Player[] {
     const result: Player[] = [];
     const seenIds = new Set<string>();
     for (const player of players) {
-        if (!player || typeof player.id !== "string" || player.id.length === 0) {
+        if (!player) {
             throw new Error("[game-manager] Cannot start game because a player could not be resolved");
         }
-        if (seenIds.has(player.id)) continue;
-        seenIds.add(player.id);
+        const playerId = getGamePlayerId(player);
+        if (seenIds.has(playerId)) continue;
+        seenIds.add(playerId);
         result.push(player);
     }
     if (result.length === 0) {
@@ -72,11 +74,11 @@ function getStartingPlayers(): Player[] {
         if (!participationState.hasSpectators()) return players;
 
         const spectatorIds = new Set(participationState.getSpectatorIds());
-        return players.filter((player) => !spectatorIds.has(player.id));
+        return players.filter((player) => !spectatorIds.has(getGamePlayerId(player)));
     }
 
     const participantIds = new Set(participationState.getParticipantIds());
-    return players.filter((player) => participantIds.has(player.id));
+    return players.filter((player) => participantIds.has(getGamePlayerId(player)));
 }
 
 function isCanceledResult(value: GameConfigSnapshot | CanceledResult): value is CanceledResult {
@@ -87,7 +89,7 @@ function notifyRoleAssignments(state: GameState): void {
     for (const player of world.getPlayers()) {
         clearPlayerItems(player);
 
-        const playerState = state.players[player.id];
+        const playerState = state.players[getGamePlayerId(player)];
         if (!playerState) continue;
         const role = state.snapshot.roles[playerState.roleId];
         player.sendMessage(rawtext([

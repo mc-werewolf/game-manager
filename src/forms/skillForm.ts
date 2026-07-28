@@ -6,10 +6,12 @@ import { getCurrentGameState } from "../state/gameState";
 import type { StoredSkill } from "../types/skill";
 import type { SkillResult } from "../types/skillRuntime";
 import { tr } from "../ui/text";
+import { getGamePlayerId } from "../game/playerIdentity";
 
 export async function openSkillForm(player: Player): Promise<void> {
     const state = getCurrentGameState();
-    const playerState = state?.players[player.id];
+    const playerId = getGamePlayerId(player);
+    const playerState = state?.players[playerId];
     if (!state || !playerState) {
         player.sendMessage(tr(T.skill.notStarted));
         return;
@@ -40,7 +42,7 @@ export async function openSkillForm(player: Player): Promise<void> {
 
     const result = await router.request<SkillResult>("werewolf-gamemanager", "werewolf:resolveSkill", {
         skillId: skill.skillId,
-        actorId: player.id,
+        actorId: playerId,
         targetIds,
     }).catch((err) => {
         player.sendMessage(tr(err instanceof Error ? err.message : T.skill.failed));
@@ -78,7 +80,7 @@ async function selectTargets(player: Player, skill: StoredSkill): Promise<string
         .filter((candidate) => {
             if (targetRule?.aliveOnly && !candidate.isAlive) return false;
             if (targetRule?.deadOnly && candidate.isAlive) return false;
-            if (targetRule?.excludeSelf && candidate.playerId === player.id) return false;
+            if (targetRule?.excludeSelf && candidate.playerId === getGamePlayerId(player)) return false;
             return true;
         })
         .sort((a, b) => a.name.localeCompare(b.name));

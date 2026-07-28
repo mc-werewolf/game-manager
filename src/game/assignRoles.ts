@@ -1,6 +1,7 @@
 import type { Player } from "@minecraft/server";
 import type { GameConfigSnapshot } from "../types/gameConfigSnapshot";
 import type { GamePlayerState } from "../types/gameState";
+import { getGamePlayerId } from "./playerIdentity";
 
 export function assignRoles(players: readonly Player[], snapshot: GameConfigSnapshot): Record<string, GamePlayerState> {
     const rolePool = createRolePool(snapshot);
@@ -20,8 +21,9 @@ export function assignRoles(players: readonly Player[], snapshot: GameConfigSnap
         if (!role) {
             throw new Error(`[game-manager] Selected role "${roleId}" is not registered`);
         }
-        result[player.id] = {
-            playerId: player.id,
+        const playerId = getGamePlayerId(player);
+        result[playerId] = {
+            playerId,
             name: player.name,
             roleId,
             factionId: role.faction,
