@@ -56,9 +56,9 @@ function formatActionButton(action: StoredSetupFormAction) {
     if (!action.description) return tr(action.label);
     return rawtext([
         tr(action.label),
-        text("\nﾂｧ7"),
+        text("\n§7"),
         tr(action.description),
-        text("ﾂｧr"),
+        text("§r"),
     ]);
 }
 
