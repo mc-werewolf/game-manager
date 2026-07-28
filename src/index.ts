@@ -52,14 +52,6 @@ router.beforeEvents.startup.subscribe((ev) => {
     }
 });
 
-if (isDevModeEnabled()) {
-    import("./dev/gametests").then(({ registerDevGameTests }) => {
-        registerDevGameTests();
-    }).catch((err) => {
-        console.error("[game-manager] Failed to register dev GameTests:", err);
-    });
-}
-
 router.afterEvents.addonActivate.subscribe((_ev) => {
     Object.assign(world.gameRules, WEREWOLF_GAMERULES);
     restoreGameManagerState().then(() => {
