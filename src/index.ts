@@ -7,6 +7,7 @@ import { WEREWOLF_GAMERULES } from "./constants/gamerules";
 import { handleRegisterFaction } from "./api/registerFaction";
 import { handleRegisterRole } from "./api/registerRole";
 import { handleRegisterSetting } from "./api/registerSetting";
+import { handleRegisterSetupFormAction } from "./api/registerSetupFormAction";
 import { handleRegisterSkill } from "./api/registerSkill";
 import { handleRegisterSkillOperation } from "./api/registerSkillOperation";
 import { handleRegisterPhase } from "./api/registerPhase";
@@ -36,6 +37,7 @@ router.beforeEvents.startup.subscribe((ev) => {
     ev.addonApi.register("werewolf:registerSkillOperation", handleRegisterSkillOperation);
     ev.addonApi.register("werewolf:registerPhase", handleRegisterPhase);
     ev.addonApi.register("werewolf:registerSetting", handleRegisterSetting);
+    ev.addonApi.register("werewolf:registerSetupFormAction", handleRegisterSetupFormAction);
     ev.addonApi.register("werewolf:getSettings", handleGetSettings);
     ev.addonApi.register("werewolf:setSetting", handleSetSetting);
     ev.addonApi.register("werewolf:resetSettings", handleResetSettings);
