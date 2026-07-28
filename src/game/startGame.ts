@@ -1,4 +1,4 @@
-import { type Player, world } from "@minecraft/server";
+import type { Player } from "@minecraft/server";
 import { router, type CanceledResult } from "@kairo-js/router";
 import { assignRoles } from "./assignRoles";
 import { clearPlayerItems } from "./playerItems";
@@ -12,7 +12,7 @@ import { skillUsageState } from "../state/skillUsageState";
 import type { GameConfigSnapshot } from "../types/gameConfigSnapshot";
 import type { GameState } from "../types/gameState";
 import { rawtext, text, tr } from "../ui/text";
-import { getGamePlayerId } from "./playerIdentity";
+import { getGamePlayerId, getWorldPlayers } from "./playerIdentity";
 
 export async function prepareGameStart(playersOverride?: readonly Player[]): Promise<GameState | undefined> {
     if (playerProfiles.applySeasonTransition()) {
@@ -69,7 +69,7 @@ function normalizeStartingPlayers(players: readonly Player[]): Player[] {
 }
 
 function getStartingPlayers(): Player[] {
-    const players = world.getPlayers();
+    const players = getWorldPlayers();
     if (!participationState.hasExplicitParticipants()) {
         if (!participationState.hasSpectators()) return players;
 
@@ -86,7 +86,7 @@ function isCanceledResult(value: GameConfigSnapshot | CanceledResult): value is 
 }
 
 function notifyRoleAssignments(state: GameState): void {
-    for (const player of world.getPlayers()) {
+    for (const player of getWorldPlayers()) {
         clearPlayerItems(player);
 
         const playerState = state.players[getGamePlayerId(player)];

@@ -4,8 +4,8 @@ import { roleCountSettings } from "../state/roleCountSettings";
 import { skillOperationRegistry } from "../registry/skillOperationRegistry";
 import type { GameState } from "../types/gameState";
 import { prepareGameStart } from "../game/startGame";
-import { world, type Player } from "@minecraft/server";
-import { getGamePlayerId } from "../game/playerIdentity";
+import type { Player } from "@minecraft/server";
+import { getGamePlayerId, getWorldPlayers } from "../game/playerIdentity";
 
 type DevSetRoleCompositionArgs = {
     readonly roleComposition: Record<string, number>;
@@ -37,7 +37,7 @@ function resolvePlayersById(playerIds: readonly unknown[]): Player[] {
         }
         return playerId;
     }))];
-    const playersById = new Map(world.getPlayers().flatMap((player) => [
+    const playersById = new Map(getWorldPlayers().flatMap((player) => [
         [getGamePlayerId(player), player] as const,
         [player.name, player] as const,
     ]));

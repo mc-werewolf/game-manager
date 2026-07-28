@@ -20,6 +20,7 @@ import { handleGetPublicServerSnapshot } from "./api/getPublicServerSnapshot";
 import { isDevModeEnabled } from "./dev/devMode";
 import { giveSetupItems } from "./game/playerItems";
 import { prepareGameStart } from "./game/startGame";
+import { getGamePlayerId, getWorldPlayers, matchesGamePlayerId } from "./game/playerIdentity";
 import { participationState } from "./state/participationState";
 import { getCurrentGameState } from "./state/gameState";
 import { openSetupForm } from "./forms/setupForm";
@@ -57,12 +58,12 @@ router.beforeEvents.startup.subscribe((ev) => {
 router.afterEvents.addonActivate.subscribe((_ev) => {
     Object.assign(world.gameRules, WEREWOLF_GAMERULES);
     restoreGameManagerState().then(() => {
-        registerCurrentSeasonPlayers(world.getPlayers());
+        registerCurrentSeasonPlayers(getWorldPlayers());
     }).catch((err) => {
         console.error("[game-manager] Failed to restore state:", err);
     });
 
-    for (const player of world.getPlayers()) {
+    for (const player of getWorldPlayers()) {
         giveSetupItems(player);
     }
 
@@ -90,13 +91,13 @@ router.afterEvents.addonActivate.subscribe((_ev) => {
             return;
         }
         if (ev.itemStack.typeId === JOIN_REGISTER_ITEM) {
-            participationState.join(ev.source.id);
+            participationState.join(getGamePlayerId(ev.source));
             giveSetupItems(ev.source);
             ev.source.sendMessage(tr(T.participation.joined));
             return;
         }
         if (ev.itemStack.typeId === SPECTATE_REGISTER_ITEM) {
-            participationState.spectate(ev.source.id);
+            participationState.spectate(getGamePlayerId(ev.source));
             giveSetupItems(ev.source);
             ev.source.sendMessage(tr(T.participation.spectating));
             return;
@@ -124,7 +125,7 @@ router.afterEvents.addonActivate.subscribe((_ev) => {
 function registerCurrentSeasonPlayers(players: readonly Player[]): void {
     let changed = false;
     for (const player of players) {
-        changed = playerProfiles.ensureCurrentSeason(player.id, player.name) || changed;
+        changed = playerProfiles.ensureCurrentSeason(getGamePlayerId(player), player.name) || changed;
     }
     if (changed) {
         savePlayerProfiles();
@@ -134,8 +135,8 @@ function registerCurrentSeasonPlayers(players: readonly Player[]): void {
 function getJoinedPlayer(ev: unknown): Player | undefined {
     const candidate = ev as { readonly player?: Player; readonly playerId?: string; readonly playerName?: string };
     if (candidate.player) return candidate.player;
-    return world.getPlayers().find((player) =>
-        player.id === candidate.playerId
+    return getWorldPlayers().find((player) =>
+        (candidate.playerId !== undefined && matchesGamePlayerId(player, candidate.playerId))
         || player.name === candidate.playerName
     );
 }

@@ -1,6 +1,6 @@
-import { world } from "@minecraft/server";
 import { router } from "@kairo-js/router";
 import { giveSetupItems } from "./playerItems";
+import { getWorldPlayers } from "./playerIdentity";
 import { T } from "../constants/translate";
 import { savePlayerProfiles } from "../persistence/gameManagerPersistence";
 import { playerProfiles } from "../state/playerProfiles";
@@ -19,7 +19,7 @@ export function endGame(state: GameState, winnerFactionIds: readonly string[]): 
 
     const winnerNames = winnerFactionIds.map((factionId) => state.snapshot.factions[factionId]?.name ?? factionId);
 
-    for (const player of world.getPlayers()) {
+    for (const player of getWorldPlayers()) {
         giveSetupItems(player);
         player.sendMessage(rawtext([
             tr(T.game.ended),

@@ -1,4 +1,4 @@
-import { world } from "@minecraft/server";
+import { getWorldPlayers } from "../game/playerIdentity";
 import { getCurrentGameState } from "../state/gameState";
 
 export type PublicServerSnapshot = {
@@ -18,7 +18,7 @@ export function handleGetPublicServerSnapshot(): PublicServerSnapshot {
 
     return {
         gameStatus: game?.status ?? "lobby",
-        connectedPlayers: world.getPlayers().length,
+        connectedPlayers: getWorldPlayers().length,
         startedAtUnixMs: game?.startedAtUnixMs,
         endedAtUnixMs: game?.endedAtUnixMs,
     };

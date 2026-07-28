@@ -1,7 +1,6 @@
-import { world } from "@minecraft/server";
 import { router } from "@kairo-js/router";
 import { checkAndEndGame } from "../game/winConditions";
-import { matchesGamePlayerId } from "../game/playerIdentity";
+import { getWorldPlayers, matchesGamePlayerId } from "../game/playerIdentity";
 import { getCurrentGameState } from "../state/gameState";
 import type { AppliedGameAction, ApplyActionsArgs, ApplyActionsResult, GameAction } from "../types/skillRuntime";
 import { rawtext, text, tr } from "../ui/text";
@@ -111,7 +110,7 @@ function setPlayerStatus(playerId: string, statusId: string, value: unknown): vo
 }
 
 function findPlayer(playerId: string) {
-    return world.getPlayers().find((player) => matchesGamePlayerId(player, playerId));
+    return getWorldPlayers().find((player) => matchesGamePlayerId(player, playerId));
 }
 
 function applied(action: GameAction): AppliedGameAction {
