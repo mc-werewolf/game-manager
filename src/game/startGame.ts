@@ -96,15 +96,8 @@ async function getStartingPlayers(): Promise<GameStartPlayer[]> {
     const players = getWorldPlayers().map(toGameStartPlayer);
     const devPlayers = await getDevToolsSimulatedPlayers();
     const combinedPlayers = [...players, ...devPlayers];
-    if (!participationState.hasExplicitParticipants()) {
-        if (!participationState.hasSpectators()) return combinedPlayers;
-
-        const spectatorIds = new Set(participationState.getSpectatorIds());
-        return combinedPlayers.filter((player) => !spectatorIds.has(player.playerId));
-    }
-
-    const participantIds = new Set(participationState.getParticipantIds());
-    return combinedPlayers.filter((player) => participantIds.has(player.playerId));
+    const spectatorIds = new Set(participationState.getSpectatorIds());
+    return combinedPlayers.filter((player) => !spectatorIds.has(player.playerId));
 }
 
 async function getDevToolsSimulatedPlayers(): Promise<GameStartPlayer[]> {

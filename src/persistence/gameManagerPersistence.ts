@@ -4,6 +4,7 @@ import { T } from "../constants/translate";
 import { roleCompositionHistory } from "../state/roleCompositionHistory";
 import { roleCountSettings } from "../state/roleCountSettings";
 import { playerProfiles } from "../state/playerProfiles";
+import { participationState, type ParticipationStatus } from "../state/participationState";
 import { savedRoleCompositions } from "../state/savedRoleCompositions";
 import { settingValues } from "../state/settingValues";
 import type { PlayerProfile } from "../types/playerProfile";
@@ -17,6 +18,7 @@ const ROLE_COMPOSITION_KEY = "role-composition";
 const ROLE_COMPOSITION_HISTORY_KEY = "role-composition-history";
 const SAVED_ROLE_COMPOSITIONS_KEY = "saved-role-compositions";
 const PLAYER_PROFILES_KEY = "player-profiles";
+const PARTICIPATION_KEY = "participation";
 
 export async function restoreGameManagerState(): Promise<void> {
     await Promise.all([
@@ -25,6 +27,7 @@ export async function restoreGameManagerState(): Promise<void> {
         restoreRoleCompositionHistory(),
         restoreSavedRoleCompositions(),
         restorePlayerProfiles(),
+        restoreParticipation(),
     ]);
     if (playerProfiles.applySeasonTransition()) {
         savePlayerProfiles();
@@ -62,6 +65,12 @@ export function savePlayerProfiles(): void {
     });
 }
 
+export function saveParticipation(): void {
+    router.save(PARTICIPATION_KEY, participationState.toRecord()).catch((err) => {
+        console.error("[game-manager] Failed to save participation:", err);
+    });
+}
+
 async function restoreSettings(): Promise<void> {
     const stored = await router.load<Record<string, SettingValue>>(SETTINGS_KEY);
     if (!isSettingValueRecord(stored)) return;
@@ -93,6 +102,13 @@ async function restorePlayerProfiles(): Promise<void> {
     savePlayerProfiles();
 }
 
+async function restoreParticipation(): Promise<void> {
+    const stored = await router.load<Record<string, ParticipationStatus>>(PARTICIPATION_KEY);
+    if (!isParticipationRecord(stored)) return;
+    participationState.replaceAll(stored);
+    saveParticipation();
+}
+
 function isSettingValueRecord(value: unknown): value is Record<string, SettingValue> {
     if (!value || typeof value !== "object" || Array.isArray(value)) return false;
     return Object.values(value).every((v) => typeof v === "boolean" || typeof v === "number" || typeof v === "string");
@@ -101,6 +117,11 @@ function isSettingValueRecord(value: unknown): value is Record<string, SettingVa
 function isNumberRecord(value: unknown): value is Record<string, number> {
     if (!value || typeof value !== "object" || Array.isArray(value)) return false;
     return Object.values(value).every((v) => typeof v === "number");
+}
+
+function isParticipationRecord(value: unknown): value is Record<string, ParticipationStatus> {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    return Object.values(value).every((status) => status === "join" || status === "spectate");
 }
 
 function isRoleCompositionHistoryRecordArray(value: unknown): value is RoleCompositionHistoryRecord[] {

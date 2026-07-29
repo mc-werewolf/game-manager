@@ -15,6 +15,7 @@ import {
     SPECTATE_REGISTER_ITEM,
     SPECTATE_REGISTER_ITEM_SLOT,
 } from "../constants/items";
+import { getGamePlayerId } from "./playerIdentity";
 import { participationState } from "../state/participationState";
 
 export function giveSetupItems(player: Player): void {
@@ -35,7 +36,7 @@ export function giveSetupItems(player: Player): void {
     setupItem.lockMode = ItemLockMode.slot;
     container.setItem(GAME_SETUP_ITEM_SLOT, setupItem);
 
-    if (participationState.isParticipating(player.id)) {
+    if (participationState.isParticipating(getGamePlayerId(player))) {
         const spectateItem = new ItemStack(SPECTATE_REGISTER_ITEM);
         spectateItem.lockMode = ItemLockMode.inventory;
         container.setItem(SPECTATE_REGISTER_ITEM_SLOT, spectateItem);

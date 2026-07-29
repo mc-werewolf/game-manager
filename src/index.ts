@@ -27,7 +27,7 @@ import { participationState } from "./state/participationState";
 import { getCurrentGameState } from "./state/gameState";
 import { openSetupForm } from "./forms/setupForm";
 import { openProfileForm } from "./forms/profileForm";
-import { restoreGameManagerState, savePlayerProfiles } from "./persistence/gameManagerPersistence";
+import { restoreGameManagerState, saveParticipation, savePlayerProfiles } from "./persistence/gameManagerPersistence";
 import { playerProfiles } from "./state/playerProfiles";
 import { tr } from "./ui/text";
 
@@ -62,13 +62,12 @@ router.afterEvents.addonActivate.subscribe((_ev) => {
     Object.assign(world.gameRules, WEREWOLF_GAMERULES);
     restoreGameManagerState().then(() => {
         registerCurrentSeasonPlayers(getWorldPlayers());
+        for (const player of getWorldPlayers()) {
+            giveSetupItems(player);
+        }
     }).catch((err) => {
         console.error("[game-manager] Failed to restore state:", err);
     });
-
-    for (const player of getWorldPlayers()) {
-        giveSetupItems(player);
-    }
 
     router.afterEvents.playerJoin.subscribe((ev) => {
         const player = getJoinedPlayer(ev);
@@ -105,12 +104,14 @@ router.afterEvents.addonActivate.subscribe((_ev) => {
         }
         if (ev.itemStack.typeId === JOIN_REGISTER_ITEM) {
             participationState.join(getGamePlayerId(ev.source));
+            saveParticipation();
             giveSetupItems(ev.source);
             ev.source.sendMessage(tr(T.participation.joined));
             return;
         }
         if (ev.itemStack.typeId === SPECTATE_REGISTER_ITEM) {
             participationState.spectate(getGamePlayerId(ev.source));
+            saveParticipation();
             giveSetupItems(ev.source);
             ev.source.sendMessage(tr(T.participation.spectating));
             return;
