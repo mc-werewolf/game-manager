@@ -1,4 +1,4 @@
-import { system, type Player } from "@minecraft/server";
+import type { Player } from "@minecraft/server";
 import { router, type CanceledResult } from "@kairo-js/router";
 import { assignRoles } from "./assignRoles";
 import { savePlayerProfiles } from "../persistence/gameManagerPersistence";
@@ -60,6 +60,7 @@ export async function prepareGameStart(playersOverride?: readonly (Player | Game
     setCurrentGameState(state);
     router.emit("werewolf:beforeGameStart", state);
     playGameStartPresentation(players, () => {
+        if (getCurrentGameState() !== state || state.status !== "running") return;
         notifyRoleAssignments(state);
         startPreparationCountdown(state);
     });
@@ -152,7 +153,7 @@ function notifyRoleAssignments(state: GameState): void {
 
 function startPreparationCountdown(state: GameState): void {
     for (let seconds = COUNTDOWN_SECONDS; seconds >= 0; seconds -= 1) {
-        system.runTimeout(() => {
+        router.runTimeout(() => {
             if (getCurrentGameState() !== state || state.status !== "running") return;
             showCountdown(seconds);
         }, (COUNTDOWN_SECONDS - seconds) * 20);

@@ -7,6 +7,9 @@ export const PERSONAL_SETTINGS_ITEM_SLOT = 1;
 export const GAME_START_ITEM = "werewolf:game_starter" as const;
 export const GAME_START_ITEM_SLOT = 8;
 
+export const GAME_FORCE_TERMINATOR_ITEM = "werewolf:game_force_terminator" as const;
+export const GAME_FORCE_TERMINATOR_ITEM_SLOT = 17;
+
 export const GAME_SETUP_ITEM = "werewolf:game_settings" as const;
 export const GAME_SETUP_ITEM_SLOT = 7;
 

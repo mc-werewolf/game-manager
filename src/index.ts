@@ -1,7 +1,7 @@
 import { world, type Player } from "@minecraft/server";
 import { router } from "@kairo-js/router";
 import { properties } from "./properties";
-import { GAME_START_ITEM, GAME_SETUP_ITEM, JOIN_REGISTER_ITEM, PROFILE_ITEM, SPECTATE_REGISTER_ITEM } from "./constants/items";
+import { GAME_FORCE_TERMINATOR_ITEM, GAME_START_ITEM, GAME_SETUP_ITEM, JOIN_REGISTER_ITEM, PROFILE_ITEM, SPECTATE_REGISTER_ITEM } from "./constants/items";
 import { T } from "./constants/translate";
 import { WEREWOLF_GAMERULES } from "./constants/gamerules";
 import { handleRegisterFaction } from "./api/registerFaction";
@@ -19,8 +19,9 @@ import { handleResolveSkill } from "./api/resolveSkill";
 import { handleGetSettings, handleResetSettings, handleSetSetting } from "./api/settings";
 import { handleGetPublicServerSnapshot } from "./api/getPublicServerSnapshot";
 import { isDevModeEnabled } from "./dev/devMode";
-import { giveSetupItems } from "./game/playerItems";
+import { giveGameItems, giveSetupItems } from "./game/playerItems";
 import { prepareGameStart } from "./game/startGame";
+import { forceEndGame } from "./game/endGame";
 import { getGamePlayerId, getWorldPlayers, matchesGamePlayerId } from "./game/playerIdentity";
 import { participationState } from "./state/participationState";
 import { getCurrentGameState } from "./state/gameState";
@@ -77,11 +78,21 @@ router.afterEvents.addonActivate.subscribe((_ev) => {
     });
 
     router.afterEvents.playerSpawn.subscribe((ev) => {
-        if (getCurrentGameState()?.status === "running") return;
+        if (getCurrentGameState()?.status === "running") {
+            giveGameItems(ev.player);
+            return;
+        }
         giveSetupItems(ev.player);
     });
 
     router.afterEvents.itemUse.subscribe((ev) => {
+        if (ev.itemStack.typeId === GAME_FORCE_TERMINATOR_ITEM) {
+            const state = getCurrentGameState();
+            if (state?.status === "running") {
+                forceEndGame(state, ev.source.name);
+            }
+            return;
+        }
         if (ev.itemStack.typeId === PROFILE_ITEM) {
             openProfileForm(ev.source).catch((err) => {
                 console.error("[game-manager] Failed to open profile form:", err);
@@ -113,7 +124,7 @@ router.afterEvents.addonActivate.subscribe((_ev) => {
         }
     });
 
-    world.afterEvents.playerInteractWithEntity.subscribe((ev) => {
+    router.afterEvents.playerInteractWithEntity.subscribe((ev) => {
         if (getCurrentGameState()?.status === "running") return;
         if (ev.target.typeId !== "minecraft:player") return;
         if (ev.target.id === ev.player.id) return;

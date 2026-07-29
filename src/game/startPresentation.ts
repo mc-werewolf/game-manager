@@ -1,6 +1,6 @@
-import { system, world, type Player } from "@minecraft/server";
+import { world, type Player } from "@minecraft/server";
 import { router } from "@kairo-js/router";
-import { clearPlayerItems } from "./playerItems";
+import { clearPlayerItems, giveGameItems } from "./playerItems";
 import { getWorldPlayers, type GameStartPlayer } from "./playerIdentity";
 import { tr } from "../ui/text";
 import { gameStartPresentationStepRegistry } from "../registry/gameStartPresentationStepRegistry";
@@ -39,6 +39,10 @@ function clearGameStartInventories(players: readonly GameStartPlayer[]): void {
     }
 
     runOverworldCommand("clear @a");
+
+    for (const player of getWorldPlayers()) {
+        giveGameItems(player);
+    }
 }
 
 function showGameStartTitle(): void {
@@ -71,27 +75,27 @@ function playSoundForAll(soundId: string): void {
 }
 
 function scheduleCameraFade(afterPresentation: () => void): void {
-    system.runTimeout(() => {
+    router.runTimeout(() => {
         runPresentationStage("fadeStart");
         fadeGameStartCamera();
     }, CAMERA_FADE_DELAY_TICKS);
 
-    system.runTimeout(() => {
+    router.runTimeout(() => {
         lockPlayerInputs();
         teleportPlayersToStageView();
     }, CAMERA_FADE_DELAY_TICKS + CAMERA_FADE_IN_TICKS + STAGE_TELEPORT_DELAY_TICKS);
 
-    system.runTimeout(() => {
+    router.runTimeout(() => {
         showStageTitle();
         playSoundForAll(CAMERA_FADE_SOUND);
         runPresentationStage("blackout");
     }, CAMERA_FADE_DELAY_TICKS + CAMERA_FADE_IN_TICKS + STAGE_REVEAL_DELAY_TICKS);
 
-    system.runTimeout(() => {
+    router.runTimeout(() => {
         runPresentationStage("fadeOut");
     }, CAMERA_FADE_DELAY_TICKS + CAMERA_FADE_IN_TICKS + CAMERA_FADE_HOLD_TICKS);
 
-    system.runTimeout(() => {
+    router.runTimeout(() => {
         unlockPlayerInputs();
         runPresentationStage("complete").finally(afterPresentation);
     }, CAMERA_FADE_DELAY_TICKS + CAMERA_FADE_IN_TICKS + CAMERA_FADE_HOLD_TICKS + CAMERA_FADE_OUT_TICKS);

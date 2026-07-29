@@ -1,5 +1,7 @@
 import { type Player, ItemLockMode, ItemStack } from "@minecraft/server";
 import {
+    GAME_FORCE_TERMINATOR_ITEM,
+    GAME_FORCE_TERMINATOR_ITEM_SLOT,
     GAME_SETUP_ITEM,
     GAME_SETUP_ITEM_SLOT,
     GAME_START_ITEM,
@@ -46,6 +48,15 @@ export function giveSetupItems(player: Player): void {
     const startItem = new ItemStack(GAME_START_ITEM);
     startItem.lockMode = ItemLockMode.slot;
     container.setItem(GAME_START_ITEM_SLOT, startItem);
+}
+
+export function giveGameItems(player: Player): void {
+    const container = player.getComponent("minecraft:inventory")?.container;
+    if (!container) return;
+
+    const forceTerminatorItem = new ItemStack(GAME_FORCE_TERMINATOR_ITEM);
+    forceTerminatorItem.lockMode = ItemLockMode.inventory;
+    container.setItem(GAME_FORCE_TERMINATOR_ITEM_SLOT, forceTerminatorItem);
 }
 
 export function clearPlayerItems(player: Player): void {
