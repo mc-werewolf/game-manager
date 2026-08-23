@@ -5,6 +5,7 @@ export type StoredRole = {
     readonly faction: string;
     readonly divinationResult: string | undefined;
     readonly color: string | undefined;
+    readonly sortIndex: number | undefined;
     readonly index: number | undefined;
     readonly max: number;
     readonly step: number;

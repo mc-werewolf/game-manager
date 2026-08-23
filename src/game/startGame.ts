@@ -1,4 +1,4 @@
-import type { Player } from "@minecraft/server";
+import { world, type Player } from "@minecraft/server";
 import { router, type CanceledResult } from "@kairo-js/router";
 import { assignRoles } from "./assignRoles";
 import { savePlayerProfiles } from "../persistence/gameManagerPersistence";
@@ -9,9 +9,17 @@ import { playerProfiles } from "../state/playerProfiles";
 import { skillUsageState } from "../state/skillUsageState";
 import type { GameConfigSnapshot } from "../types/gameConfigSnapshot";
 import type { GameState } from "../types/gameState";
+import { borderedChatMessage } from "../ui/chat";
 import { rawtext, text, tr, trWith } from "../ui/text";
+import { playPlayerSound } from "../ui/sounds";
+import { allowArrowProjectiles, clearArrowProjectiles, giveCombatItemsToAlivePlayers } from "./combat";
+import { applyCountdownEffects, removeCountdownEffects } from "./countdownEffects";
+import { startDevSimulatedPlayerMonitor } from "./devSimulatedPlayerMonitor";
+import { applyGameStartGameModes } from "./gameModes";
 import { getGamePlayerId, getWorldPlayers, toGameStartPlayer, type GameStartPlayer } from "./playerIdentity";
+import { startRoleActionBar } from "./roleActionBar";
 import { playGameStartPresentation } from "./startPresentation";
+import { giveGameItems } from "./playerItems";
 
 type DevToolsSessionSummary = {
     readonly players?: readonly {
@@ -21,9 +29,10 @@ type DevToolsSessionSummary = {
 };
 
 const COUNTDOWN_SECONDS = 10;
+const ROLE_REVEAL_SECONDS = 3;
 const ROLE_REVEAL_KEY = "werewolf-gamemanager.game.start.role.reveal";
 const COUNTDOWN_NORMAL_KEY = "werewolf-gamemanager.game.start.countdown.normal";
-const COUNTDOWN_WARNING_KEY = "werewolf-gamemanager.game.start.countdown.warning";
+const COUNTDOWN_CHAT_KEY = "werewolf-gamemanager.game.start.countdown.warning";
 const COUNTDOWN_START_KEY = "werewolf-gamemanager.game.start.countdown.start";
 const COUNTDOWN_NORMAL_SOUND = "note.hat";
 const COUNTDOWN_WARNING_SOUND = "random.orb";
@@ -47,6 +56,7 @@ export async function prepareGameStart(playersOverride?: readonly (Player | Game
     const players = normalizeStartingPlayers(playersOverride ? playersOverride.map(normalizeStartPlayerInput) : await getStartingPlayers());
     const state: GameState = {
         status: "running",
+        gameplayStarted: false,
         startedAtTick: router.currentTick,
         startedAtUnixMs: Date.now(),
         endedAtTick: undefined,
@@ -57,7 +67,10 @@ export async function prepareGameStart(playersOverride?: readonly (Player | Game
         deathRecords: [],
     };
     skillUsageState.clear();
+    allowArrowProjectiles();
+    clearArrowProjectiles();
     setCurrentGameState(state);
+    applyGameStartGameModes(state);
     router.emit("werewolf:beforeGameStart", state);
     playGameStartPresentation(players, () => {
         if (getCurrentGameState() !== state || state.status !== "running") return;
@@ -129,22 +142,19 @@ function notifyRoleAssignments(state: GameState): void {
         const playerState = state.players[getGamePlayerId(player)];
         if (!playerState) continue;
         const role = state.snapshot.roles[playerState.roleId];
-        const roleMessage = trWith(ROLE_REVEAL_KEY, roleName(role, playerState.roleId));
+        const roleMessage = trWith(ROLE_REVEAL_KEY, roleName(state.snapshot, role, playerState.roleId));
         player.onScreenDisplay.setTitle(roleMessage, {
             subtitle: trWith(COUNTDOWN_NORMAL_KEY, [String(COUNTDOWN_SECONDS)]),
             fadeInDuration: 0,
-            stayDuration: COUNTDOWN_SECONDS * 20,
+            stayDuration: ROLE_REVEAL_SECONDS * 20,
             fadeOutDuration: 20,
         });
-        player.sendMessage(rawtext([
-            text("\u00a78━━━━━━━━━━━━━━━━━━━━\n"),
-            roleMessage,
-            text("\n\u00a78━━━━━━━━━━━━━━━━━━━━\u00a7r"),
-        ]));
+        player.sendMessage(borderedChatMessage([roleMessage]));
     }
 }
 
 function startPreparationCountdown(state: GameState): void {
+    applyCountdownEffects(state);
     for (let seconds = COUNTDOWN_SECONDS; seconds >= 0; seconds -= 1) {
         router.runTimeout(() => {
             if (getCurrentGameState() !== state || state.status !== "running") return;
@@ -157,25 +167,55 @@ function showCountdown(seconds: number): void {
     for (const player of getWorldPlayers()) {
         try {
             if (seconds > 0) {
-                player.sendMessage(trWith(seconds <= 3 ? COUNTDOWN_WARNING_KEY : COUNTDOWN_NORMAL_KEY, [String(seconds)]));
-                player.playSound(seconds <= 3 ? COUNTDOWN_WARNING_SOUND : COUNTDOWN_NORMAL_SOUND);
+                player.sendMessage(trWith(COUNTDOWN_CHAT_KEY, [String(seconds)]));
+                playPlayerSound(player, seconds <= 3 ? COUNTDOWN_WARNING_SOUND : COUNTDOWN_NORMAL_SOUND, undefined, "countdown sound");
             } else {
-                player.sendMessage(rawtext([
-                    text("\u00a7l"),
-                    tr(COUNTDOWN_START_KEY),
-                    text("\u00a7r"),
-                ]));
-                player.playSound(COUNTDOWN_START_SOUND);
+                player.sendMessage(tr(COUNTDOWN_START_KEY));
+                playPlayerSound(player, COUNTDOWN_START_SOUND, undefined, "countdown start sound");
             }
         } catch (err) {
             console.warn("[game-manager] Failed to show game start countdown:", err);
         }
     }
+    if (seconds === 1) {
+        const state = getCurrentGameState();
+        if (state?.status === "running") {
+            removeCountdownEffects(state);
+        }
+    }
+    if (seconds === 0) {
+        const state = getCurrentGameState();
+        if (state?.status === "running") {
+            state.gameplayStarted = true;
+            removeCountdownEffects(state);
+            enablePvp();
+            startRoleActionBar(state);
+            startDevSimulatedPlayerMonitor();
+            giveGameItemsToPlayers(state);
+            giveCombatItemsToAlivePlayers(state);
+        }
+    }
 }
 
-function roleName(role: GameState["snapshot"]["roles"][string] | undefined, fallbackRoleId: string) {
+function giveGameItemsToPlayers(state: GameState): void {
+    for (const player of getWorldPlayers()) {
+        if (state.players[getGamePlayerId(player)] === undefined) continue;
+        giveGameItems(player);
+    }
+}
+
+function enablePvp(): void {
+    try {
+        world.gameRules.pvp = true;
+    } catch (err) {
+        console.warn("[game-manager] Failed to enable PvP:", err);
+    }
+}
+
+function roleName(snapshot: GameConfigSnapshot, role: GameState["snapshot"]["roles"][string] | undefined, fallbackRoleId: string) {
+    const color = role?.color ?? (role?.faction ? snapshot.factions[role.faction]?.color : undefined) ?? "\u00a7f";
     return rawtext([
-        text(role?.color ?? "\u00a7f"),
+        text(color),
         tr(role?.name ?? fallbackRoleId),
         text("\u00a7r"),
     ]);

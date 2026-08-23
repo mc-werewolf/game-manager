@@ -8,6 +8,7 @@ type RegisterRoleArgs = {
     faction: string;
     divinationResult?: string;
     color?: string;
+    sortIndex?: number;
     index?: number;
     max?: number;
     step?: number;
@@ -21,6 +22,7 @@ export function handleRegisterRole(args: RegisterRoleArgs, ctx: ApiHandlerContex
         faction: args.faction,
         divinationResult: args.divinationResult,
         color: args.color,
+        sortIndex: args.sortIndex,
         index: args.index,
         max: args.max ?? 4,
         step: args.step ?? 1,

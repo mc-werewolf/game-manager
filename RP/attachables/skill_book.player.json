@@ -1,0 +1,37 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "werewolf:skill_book",
+      "item": {
+        "werewolf:skill_book": "query.is_owner_identifier_any('minecraft:player')"
+      },
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/items/book_normal"
+      },
+      "geometry": {
+        "default": "geometry.werewolf.skill_book_first_person"
+      },
+      "animations": {
+        "first_person": "animation.werewolf.skill_item.first_person",
+        "third_person_hidden": "animation.werewolf.skill_item.third_person_hidden"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "first_person": "c.is_first_person"
+          },
+          {
+            "third_person_hidden": "!c.is_first_person"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.werewolf.skill_item"
+      ]
+    }
+  }
+}

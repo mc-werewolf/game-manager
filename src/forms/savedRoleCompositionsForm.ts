@@ -13,6 +13,7 @@ import { roleCountSettings } from "../state/roleCountSettings";
 import { savedRoleCompositions } from "../state/savedRoleCompositions";
 import type { SavedRoleCompositionRecord } from "../types/savedRoleComposition";
 import type { StoredRole } from "../types/role";
+import { CHAT_DIVIDER } from "../ui/chat";
 import { formatJstDateTime } from "../ui/datetime";
 import { rawtext, text, tr, trWith } from "../ui/text";
 import {
@@ -198,7 +199,7 @@ function buildSavedCompositionLabel(record: SavedRoleCompositionRecord) {
         trWith(T.roleComposition.savedAt, [formatJstDateTime(record.savedAtUnixMs)]),
         text("\n"),
         trWith(T.roleComposition.savedBy, [record.savedByName]),
-        text("\n§6---------------------§r\n"),
+        text(`\n${CHAT_DIVIDER}\n`),
         tr(T.roleComposition.savedComposition),
         text("\n"),
         ...buildRoleCompositionParts(selectedRoles, record.counts),

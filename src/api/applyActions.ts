@@ -1,9 +1,14 @@
 import { router } from "@kairo-js/router";
+import { sendDeathMessages } from "../game/deathMessages";
+import { setDeadPlayerSpectator } from "../game/gameModes";
 import { checkAndEndGame } from "../game/winConditions";
 import { getWorldPlayers, matchesGamePlayerId } from "../game/playerIdentity";
 import { getCurrentGameState } from "../state/gameState";
 import type { AppliedGameAction, ApplyActionsArgs, ApplyActionsResult, GameAction } from "../types/skillRuntime";
+import { playSoundAtPlayerLocation } from "../ui/sounds";
 import { rawtext, text, tr } from "../ui/text";
+
+const PLAYER_DIE_SOUND = "game.player.die";
 
 export function handleApplyActions(args: ApplyActionsArgs): ApplyActionsResult {
     const applied: AppliedGameAction[] = [];
@@ -18,10 +23,17 @@ export function handleApplyActions(args: ApplyActionsArgs): ApplyActionsResult {
         });
 
         if (action.type === "kill" && result.applied) {
-            recordDeath(action.targetId, args.context?.actorId, action.reason);
+            const state = getCurrentGameState();
+            const killerId = resolveKillerId(state, args.context?.actorId);
+            recordDeath(action.targetId, killerId, action.reason);
+            playPlayerDeathSound(action.targetId);
+            setDeadPlayerSpectator(action.targetId);
+            if (state) {
+                sendDeathMessages(state, action.targetId, killerId, action.reason);
+            }
             router.emit("werewolf:playerKilled", {
                 playerId: action.targetId,
-                killerId: args.context?.actorId,
+                killerId,
                 reason: action.reason,
                 context: args.context,
             });
@@ -79,15 +91,19 @@ function markDead(playerId: string): boolean {
     return true;
 }
 
-function recordDeath(targetId: string, actorId: string | undefined, reason: string | undefined): void {
+function recordDeath(targetId: string, killerId: string | undefined, reason: string | undefined): void {
     const state = getCurrentGameState();
     if (!state) return;
     state.deathRecords.push({
         targetId,
-        killerId: actorId !== undefined && state.players[actorId] !== undefined ? actorId : undefined,
+        killerId,
         reason,
         tick: router.currentTick,
     });
+}
+
+function resolveKillerId(state: ReturnType<typeof getCurrentGameState>, actorId: string | undefined): string | undefined {
+    return actorId !== undefined && state?.players[actorId] !== undefined ? actorId : undefined;
 }
 
 function protectPlayer(playerId: string): void {
@@ -111,6 +127,12 @@ function setPlayerStatus(playerId: string, statusId: string, value: unknown): vo
 
 function findPlayer(playerId: string) {
     return getWorldPlayers().find((player) => matchesGamePlayerId(player, playerId));
+}
+
+function playPlayerDeathSound(playerId: string): void {
+    const player = findPlayer(playerId);
+    if (!player) return;
+    playSoundAtPlayerLocation(player, PLAYER_DIE_SOUND, undefined, "player death sound");
 }
 
 function applied(action: GameAction): AppliedGameAction {

@@ -2,6 +2,7 @@ import type { GameConfigSnapshot } from "./gameConfigSnapshot";
 
 export type GameState = {
     status: "running" | "ended";
+    gameplayStarted: boolean;
     readonly startedAtTick: number;
     readonly startedAtUnixMs: number;
     endedAtTick: number | undefined;

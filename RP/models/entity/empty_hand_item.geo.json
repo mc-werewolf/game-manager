@@ -1,0 +1,22 @@
+{
+  "format_version": "1.16.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.werewolf.empty_hand_item",
+        "texture_width": 1,
+        "texture_height": 1,
+        "visible_bounds_width": 0.1,
+        "visible_bounds_height": 0.1,
+        "visible_bounds_offset": [0, 0, 0]
+      },
+      "bones": [
+        {
+          "name": "empty_hand_item",
+          "pivot": [0, 0, 0],
+          "binding": "q.item_slot_to_bone_name(context.item_slot)"
+        }
+      ]
+    }
+  ]
+}

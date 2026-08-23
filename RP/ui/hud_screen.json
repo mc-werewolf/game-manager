@@ -3,7 +3,7 @@
 
   "werewolf_beta_warning": {
     "type": "label",
-    "text": "werewolf-gamemanager.ui.betaWarning", 
+    "text": "werewolf-gamemanager.ui.betaWarning",
     "anchor_from": "top_middle",
     "anchor_to": "top_middle",
     "offset": [ 0, 18 ],
@@ -19,27 +19,27 @@
     "anchor_from": "bottom_right",
     "anchor_to": "bottom_right",
     "controls": [
-        {
-            "werewolf_version@hud.werewolf_version": {
-                "anchor_from": "right_middle",
-                "anchor_to": "right_middle",
-                "offset": [ -2, 6 ]
-            }
-        },
-        {
-            "werewolf_build@hud.werewolf_build": {
-                "anchor_from": "right_middle",
-                "anchor_to": "right_middle",
-                "offset": [ -2, -6 ]
-            }
-        },
-        {
-            "werewolf_author@hud.werewolf_author": {
-                "anchor_from": "right_middle",
-                "anchor_to": "right_middle",
-                "offset": [ -2, -18 ]
-            }
+      {
+        "werewolf_version@hud.werewolf_version": {
+          "anchor_from": "right_middle",
+          "anchor_to": "right_middle",
+          "offset": [ -2, 6 ]
         }
+      },
+      {
+        "werewolf_build@hud.werewolf_build": {
+          "anchor_from": "right_middle",
+          "anchor_to": "right_middle",
+          "offset": [ -2, -6 ]
+        }
+      },
+      {
+        "werewolf_author@hud.werewolf_author": {
+          "anchor_from": "right_middle",
+          "anchor_to": "right_middle",
+          "offset": [ -2, -18 ]
+        }
+      }
     ]
   },
 

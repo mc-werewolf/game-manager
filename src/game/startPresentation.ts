@@ -1,9 +1,10 @@
 import { world, type Player } from "@minecraft/server";
 import { router } from "@kairo-js/router";
-import { clearPlayerItems, giveGameItems } from "./playerItems";
+import { clearPlayerItems, giveForceTerminatorItem } from "./playerItems";
 import { getWorldPlayers, type GameStartPlayer } from "./playerIdentity";
 import { tr } from "../ui/text";
 import { gameStartPresentationStepRegistry } from "../registry/gameStartPresentationStepRegistry";
+import { playSoundForAll } from "../ui/sounds";
 import type { GameStartPresentationStage } from "../types/gameStartPresentationStep";
 
 const TITLE_KEY = "werewolf-gamemanager.game.start.presentation.title";
@@ -41,7 +42,7 @@ function clearGameStartInventories(players: readonly GameStartPlayer[]): void {
     runOverworldCommand("clear @a");
 
     for (const player of getWorldPlayers()) {
-        giveGameItems(player);
+        giveForceTerminatorItem(player);
     }
 }
 
@@ -62,16 +63,6 @@ function showGameStartTitle(): void {
     runOverworldCommand("title @a times 0 100 20");
     runOverworldCommand(SUBTITLE_RAWTEXT_COMMAND);
     runOverworldCommand(TITLE_RAWTEXT_COMMAND);
-}
-
-function playSoundForAll(soundId: string): void {
-    for (const player of getWorldPlayers()) {
-        try {
-            player.playSound(soundId);
-        } catch (err) {
-            console.warn(`[game-manager] Failed to play sound "${soundId}":`, err);
-        }
-    }
 }
 
 function scheduleCameraFade(afterPresentation: () => void): void {

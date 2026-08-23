@@ -10,6 +10,19 @@ export const GAME_START_ITEM_SLOT = 8;
 export const GAME_FORCE_TERMINATOR_ITEM = "werewolf:game_force_terminator" as const;
 export const GAME_FORCE_TERMINATOR_ITEM_SLOT = 17;
 
+export const GAME_COMBAT_BOW_ITEM = "minecraft:bow" as const;
+export const GAME_COMBAT_BOW_ITEM_SLOT = 0;
+
+export const GAME_COMBAT_COOLDOWN_BOW_ITEM = "werewolf:cooldown_bow" as const;
+
+export const GAME_COMBAT_ARROW_ITEM = "minecraft:arrow" as const;
+export const GAME_COMBAT_ARROW_ITEM_SLOT = 9;
+
+export const SKILL_BOOK_ITEM = "werewolf:skill_book" as const;
+export const SKILL_BOOK_ITEM_SLOT = 8;
+
+export const SKILL_COOLDOWN_ITEM = "werewolf:skill_cooldown" as const;
+
 export const GAME_SETUP_ITEM = "werewolf:game_settings" as const;
 export const GAME_SETUP_ITEM_SLOT = 7;
 

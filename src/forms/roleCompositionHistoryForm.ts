@@ -1,4 +1,4 @@
-import { world, type Player } from "@minecraft/server";
+import type { Player } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { T } from "../constants/translate";
 import { saveRoleComposition, saveRoleCompositionHistory } from "../persistence/gameManagerPersistence";
@@ -8,13 +8,12 @@ import { roleCompositionHistory } from "../state/roleCompositionHistory";
 import { roleCountSettings } from "../state/roleCountSettings";
 import type { RoleCompositionHistoryRecord } from "../types/roleCompositionHistory";
 import type { StoredRole } from "../types/role";
+import { CHAT_DIVIDER, sendMessageForAll } from "../ui/chat";
 import { formatJstDateTime } from "../ui/datetime";
 import { playUiConfirmForAll } from "../ui/sounds";
 import { rawtext, text, tr, trWith } from "../ui/text";
 
 const PAGE_SIZE = 5;
-const SEPARATOR = "§6---------------------§r";
-
 type HistoryAction =
     | { readonly type: "restore"; readonly record: RoleCompositionHistoryRecord }
     | { readonly type: "previous" }
@@ -96,7 +95,7 @@ function buildHistoryLabel(record: RoleCompositionHistoryRecord) {
         trWith(T.roleComposition.historyChangedAt, [formatJstDateTime(record.changedAtUnixMs)]),
         text("\n"),
         trWith(T.roleComposition.historyChangedBy, [record.changedByName]),
-        text("\n§6---------------------§r\n"),
+        text(`\n${CHAT_DIVIDER}\n`),
         tr(T.roleComposition.historyAfter),
         text("\n"),
         ...buildRoleCompositionParts(selectedRoles, record.after),
@@ -134,17 +133,16 @@ export function hasRoleCompositionChanged(before: Record<string, number>, after:
 
 export function notifyRoleCompositionChanged(player: Player, selectedRoles: StoredRole[], total: number): void {
     playUiConfirmForAll();
-    world.sendMessage(rawtext([
+    sendMessageForAll(rawtext([
         trWith(T.roleComposition.appliedNotice, [player.name]),
-        text(`\n${SEPARATOR}`),
-        text("\n"),
+        text(`\n${CHAT_DIVIDER}\n`),
         tr(T.roleComposition.current),
         text("\n"),
         ...buildRoleCompositionParts(selectedRoles, roleCountSettings.toRecord()),
         text("\n\n"),
         tr(T.roleComposition.total),
         text(` ${total}`),
-        text(`\n${SEPARATOR}`),
+        text(`\n${CHAT_DIVIDER}`),
     ]));
 }
 

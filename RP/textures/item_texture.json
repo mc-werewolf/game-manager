@@ -20,6 +20,15 @@
     },
     "werewolf:spectate_register": {
       "textures": "textures/werewolf-gamemanager/items/spectate_register"
+    },
+    "werewolf:cooldown_bow": {
+      "textures": "textures/blocks/barrier"
+    },
+    "werewolf:skill_book": {
+      "textures": "textures/items/book_normal"
+    },
+    "werewolf:skill_cooldown": {
+      "textures": "textures/blocks/barrier"
     }
   }
 }

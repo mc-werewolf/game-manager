@@ -7,7 +7,14 @@ type AliveCounts = Record<string, number>;
 export function evaluateWinConditions(state: GameState): string[] {
     const alive = countAliveByFaction(state);
     const winners = Object.values(state.snapshot.factions)
-        .filter((faction) => evaluateWinExpression(faction.winCondition.expr, alive))
+        .filter((faction) => {
+            try {
+                return evaluateWinExpression(faction.winCondition.expr, alive);
+            } catch (err) {
+                console.warn(`[game-manager] Failed to evaluate win condition for faction "${faction.factionId}":`, err);
+                return false;
+            }
+        })
         .sort((a, b) => b.winCondition.priority - a.winCondition.priority || a.factionId.localeCompare(b.factionId));
 
     if (winners.length === 0) return [];
@@ -25,6 +32,7 @@ export function checkAndEndGame(): void {
     const winnerFactionIds = evaluateWinConditions(state);
     if (winnerFactionIds.length === 0) return;
 
+    console.warn(`[game-manager] Win condition matched: ${winnerFactionIds.join(", ")}`);
     endGame(state, winnerFactionIds);
 }
 

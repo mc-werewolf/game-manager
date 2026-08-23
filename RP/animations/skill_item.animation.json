@@ -1,0 +1,21 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.werewolf.skill_item.first_person": {
+			"loop": true,
+			"bones": {
+				"skill_book": {
+					"scale": 0
+				}
+			}
+		},
+		"animation.werewolf.skill_item.third_person_hidden": {
+			"loop": true,
+			"bones": {
+				"skill_book": {
+					"scale": 0
+				}
+			}
+		}
+	}
+}

@@ -7,6 +7,7 @@ import type { StoredSkill } from "../types/skill";
 import type { SkillResult } from "../types/skillRuntime";
 import { tr } from "../ui/text";
 import { getGamePlayerId } from "../game/playerIdentity";
+import { updateSkillItem } from "../game/playerItems";
 
 export async function openSkillForm(player: Player): Promise<void> {
     const state = getCurrentGameState();
@@ -49,6 +50,7 @@ export async function openSkillForm(player: Player): Promise<void> {
         return undefined;
     });
     if (!result) return;
+    updateSkillItem(player);
     if (isCanceledResult(result)) {
         player.sendMessage(tr(T.skill.canceled));
     }
